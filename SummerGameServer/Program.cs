@@ -6,9 +6,9 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, ct) =>
     {
-        document.Info.Title = "SummerLoginServer";
+        document.Info.Title = "SummerGameServer";
         document.Info.Version = "0.0.1";
-        document.Info.Description = "여름방학 비동기 멀티플젝 로그인 서버";
+        document.Info.Description = "여름방학 비동기 멀티플젝 게임 서버";
         return Task.CompletedTask;
     });
 });
@@ -21,7 +21,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "SummerGameLoginServer");
+        options.SwaggerEndpoint("/openapi/v1.json", "SummerGameServer");
     });
 }
 

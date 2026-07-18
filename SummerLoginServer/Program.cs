@@ -1,4 +1,7 @@
 ﻿
+using Microsoft.EntityFrameworkCore;
+using SummerLoginServer.DbContexts;
+
 namespace SummerLoginServer
 {
     public class Program
@@ -22,6 +25,13 @@ namespace SummerLoginServer
                 });
             });
 
+            string? connectionString = builder.Configuration.GetConnectionString("MySql")
+                ?? throw new InvalidOperationException("Connection string MySql not found");
+            builder.Services.AddDbContext<UserDbContext>(options =>
+            {
+                options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 41)));
+            });
+            
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -30,7 +40,7 @@ namespace SummerLoginServer
                 app.MapOpenApi();
                 app.UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint("/openapi/v1.json", "SummerGameLoginServer");
+                    options.SwaggerEndpoint("/openapi/v1.json", "SummerLoginServer");
                 });
             }
 
@@ -38,8 +48,8 @@ namespace SummerLoginServer
 
             app.UseAuthorization();
 
-
             app.MapControllers();
+            app.MapGet("/", () => "SummerLoginServer is running");
 
             app.Run();
         }
