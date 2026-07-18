@@ -1,0 +1,6 @@
+@SummerLoginServer_HostAddress = http://localhost:5147
+
+GET {{SummerLoginServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SummerGameServer/SummerGameServer.csproj" />
+  <Project Path="SummerLoginServer/SummerLoginServer.csproj" Id="7505cbe7-729f-4c1f-a245-ab3bdbaa6f4a" />
+</Solution>
