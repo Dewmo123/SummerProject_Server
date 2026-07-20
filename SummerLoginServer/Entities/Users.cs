@@ -9,16 +9,10 @@ namespace SummerLoginServer.Entities
 
         [MaxLength(50)]
         public string Username { get; set; } = null!;
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    }
-    public class ExternalLogin
-    {
-        public int Id { get; set; }
-        public int UserId { get; set; }
         public LoginProvider Provider { get; set; }
         public string ProviderUserId { get; set; } = null!;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     }
     public enum LoginProvider
     {
