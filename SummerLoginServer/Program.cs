@@ -1,6 +1,12 @@
 ﻿
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using SummerLoginServer.DbContexts;
+using SummerLoginServer.Services;
+using System.Text;
 
 namespace SummerLoginServer
 {
@@ -31,7 +37,13 @@ namespace SummerLoginServer
             {
                 options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 41)));
             });
-            
+            string? redisConnection = builder.Configuration.GetConnectionString("Redis")
+                ?? throw new InvalidOperationException("Connection string MySql not found");
+
+            builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+            builder.Services.AddAppJwtAuthentication(builder.Configuration);
+            builder.Services.AddSingleton<JwtTokenService>();
+            builder.Services.AddScoped<GoogleService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -52,6 +64,45 @@ namespace SummerLoginServer
             app.MapGet("/", () => "SummerLoginServer is running");
 
             app.Run();
+        }
+    }
+    public static class AuthenticationExtensions
+    {
+        public static IServiceCollection AddAppJwtAuthentication(this IServiceCollection services,IConfiguration configuration)
+        {
+            services.AddOptions<JwtOptions>()
+                .Bind(configuration.GetRequiredSection(JwtOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer();
+
+            services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+                .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptionsAccessor) =>
+                {
+                    var jwt = jwtOptionsAccessor.Value;
+
+                    bearerOptions.MapInboundClaims = false;
+                    bearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwt.Issuer,
+
+                        ValidateAudience = true,
+                        ValidAudience = jwt.Audience,
+
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromSeconds(30),
+
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey))
+                    };
+                });
+
+            services.AddAuthentication();
+
+            return services;
         }
     }
 }

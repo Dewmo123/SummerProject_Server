@@ -14,9 +14,20 @@ namespace SummerLoginServer.DbContexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasIndex(u => u.Username)
+                    .IsUnique();
+
+                entity.HasIndex(u => new
+                {
+                    u.Provider,
+                    u.ProviderUserId
+                }).IsUnique();
+
+                entity.Property(u => u.ProviderUserId)
+                    .HasMaxLength(255);
+            });
         }
     }
 }
