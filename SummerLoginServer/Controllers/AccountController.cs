@@ -7,6 +7,7 @@ using SummerLoginServer.Services;
 
 namespace SummerLoginServer.Controllers
 {
+    [ApiController]
     [Route("api/account")]
     public class AccountController : ControllerBase
     {
@@ -23,9 +24,7 @@ namespace SummerLoginServer.Controllers
             _jwtTokenService = jwtTokenService;
         }
         [HttpPost("login/google")]
-        public async Task<ActionResult<GoogleLoginResponse>> GoogleLogin(
-            GoogleLoginRequest request,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<GoogleLoginResponse>> GoogleLogin(GoogleLoginRequest request, CancellationToken cancellationToken)
         {
             var googleUser = await _googleService.VerifyIdTokenAsync(request.IdToken,
                 cancellationToken);

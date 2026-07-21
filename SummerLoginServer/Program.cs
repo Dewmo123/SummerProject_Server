@@ -40,8 +40,9 @@ namespace SummerLoginServer
             string? redisConnection = builder.Configuration.GetConnectionString("Redis")
                 ?? throw new InvalidOperationException("Connection string MySql not found");
 
-            builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
             builder.Services.AddAppJwtAuthentication(builder.Configuration);
+
+            builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
             builder.Services.AddSingleton<JwtTokenService>();
             builder.Services.AddScoped<GoogleService>();
             var app = builder.Build();

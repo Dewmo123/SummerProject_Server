@@ -56,7 +56,7 @@ namespace SummerLoginServer.Services
 
             var jwt = new JwtSecurityToken(
                 _issuer,     //private 키를 생성한 사람? (로그인 서버)
-                _audience,   //public 토큰을 사용한 대상 (게임 서버)
+                _audience,   //public 토큰을 사용할 대상 (게임 서버)
                 claims,
                 notBefore: DateTime.UtcNow,
                 expires: expiresAt,
