@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -17,7 +18,18 @@ namespace SummerLoginServer
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddHttpLogging(options =>
+            {
+                options.LoggingFields =
+                    HttpLoggingFields.RequestMethod |
+                    HttpLoggingFields.RequestPath |
+                    HttpLoggingFields.RequestQuery |
+                    HttpLoggingFields.ResponseStatusCode |
+                    HttpLoggingFields.Duration;
 
+                // 요청과 응답 정보를 한 로그로 합침
+                options.CombineLogs = true;
+            });
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi(options =>
@@ -37,12 +49,12 @@ namespace SummerLoginServer
             {
                 options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 41)));
             });
-            string? redisConnection = builder.Configuration.GetConnectionString("Redis")
-                ?? throw new InvalidOperationException("Connection string MySql not found");
+            //string? redisConnection = builder.Configuration.GetConnectionString("Redis")
+            //    ?? throw new InvalidOperationException("Connection string MySql not found");
 
             builder.Services.AddAppJwtAuthentication(builder.Configuration);
 
-            builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+            //builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
             builder.Services.AddSingleton<JwtTokenService>();
             builder.Services.AddScoped<GoogleService>();
             var app = builder.Build();
@@ -56,7 +68,7 @@ namespace SummerLoginServer
                     options.SwaggerEndpoint("/openapi/v1.json", "SummerLoginServer");
                 });
             }
-
+            app.UseHttpLogging();
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
