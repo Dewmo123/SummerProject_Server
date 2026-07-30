@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SummerGameServer.Extensions;
 using SummerGameServer.Models;
 using SummerGameServer.Services;
 
@@ -16,15 +17,20 @@ namespace SummerGameServer.Controllers
         [HttpGet("{stageId:int}")]
         public GetStageResponse GetStaticStage(int stageId)
         {
-            RoomData roomData = _stageService.GetStage(stageId);
-            MapData mapData = _stageService.GetMap(roomData.MapId);
+            StageData stageData = _stageService.GetStage(stageId);
 
-            return new GetStageResponse(mapData.Width, mapData.Height, mapData.TileDatas, roomData.Trapdatas);
+            return new GetStageResponse(stageData.Width,stageData.Height,stageData.TileDatas,stageData.Trapdatas);
         }
-        [HttpGet]
-        public void GetRandomUserStage()//추후
+        [HttpPost("{stageId:int}/enter")]
+        public async Task<IActionResult> Enter(int stageId)
         {
+            if (!User.TryGetUserId(out int userId))
+                return Unauthorized();
 
+            StageEnterResponse? response = await _stageService.EnterAsync(userId, stageId);
+            if (response is null)
+                return NotFound(new { Message = "존재하지 않는 스테이지입니다." });
+            return Ok(response);
         }
     }
 }

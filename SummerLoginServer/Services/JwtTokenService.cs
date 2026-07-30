@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Persistence.Entities;
 using SummerLoginServer.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;

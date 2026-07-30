@@ -1,4 +1,6 @@
-﻿using SummerGameServer.Services;
+﻿using Microsoft.EntityFrameworkCore;
+using SummerGameServer.DbContexts;
+using SummerGameServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,10 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.AddScoped<StageService>();
+builder.Services.AddScoped<CharacterService>();
 builder.Services.AddControllers();
+string mySqlConnection = builder.Configuration.GetConnectionString("MySql") ?? throw new Exception("MySql ConnectionString is null");
+builder.Services.AddDbContext<UserDbContext>(options => options.UseMySql(mySqlConnection, new MySqlServerVersion(new Version(8, 0, 41))));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

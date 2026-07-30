@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SummerLoginServer.Entities;
+using Persistence.Entities;
+using Persistence.Configuration;
 
 namespace SummerLoginServer.DbContexts
 {
@@ -10,24 +11,13 @@ namespace SummerLoginServer.DbContexts
 
         }
         public DbSet<User> Users => Set<User>();
+        public DbSet<Character> Chars => Set<Character>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.HasIndex(u => u.Username)
-                    .IsUnique();
-
-                entity.HasIndex(u => new
-                {
-                    u.Provider,
-                    u.ProviderUserId
-                }).IsUnique();
-
-                entity.Property(u => u.ProviderUserId)
-                    .HasMaxLength(255);
-            });
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new CharacterConfiguration());
         }
     }
 }

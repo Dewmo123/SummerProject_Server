@@ -1,15 +1,17 @@
 ﻿
 namespace SummerGameServer.Models
 {
-    public sealed record RoomData(int MapId, TrapData[] Trapdatas);
-    public sealed record MapData(int MapId, int Width,int Height, bool[] TileDatas = null!);
+    public sealed record MapData(int MapId, int Width, int Height, bool[] TileDatas) : ICatalogModel
+    {
+        public int Id => MapId;
+    }
+
     public sealed record TrapData(TrapType Type, Vector3Int Position, Quaternion Rotation);
     public enum TrapType
     {
         SawTrap,
     }
-    public sealed record GetStageResponse(int Width, int Height, bool[] TileDatas = null!, TrapData[] TrapDatas = null!);
-
+    public sealed record UploadUserRoomRequest(int MapId, TrapData[] TrapDatas);
     public struct Vector3Int
     {
         public int x { get; set; }

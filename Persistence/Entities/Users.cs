@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Persistence.Entities;
 using System.ComponentModel.DataAnnotations;
 
-namespace SummerLoginServer.Entities
+namespace Persistence.Entities
 {
     public class User
     {
@@ -12,6 +12,7 @@ namespace SummerLoginServer.Entities
         public LoginProvider Provider { get; set; }
         public string ProviderUserId { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public Character? Character { get; set; }
 
     }
     public enum LoginProvider

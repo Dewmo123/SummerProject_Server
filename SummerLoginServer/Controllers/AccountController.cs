@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Entities;
 using SummerLoginServer.DbContexts;
-using SummerLoginServer.Entities;
 using SummerLoginServer.Models;
 using SummerLoginServer.Services;
 

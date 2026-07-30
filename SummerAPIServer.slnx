@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Persistence/Persistence.csproj" Id="15257d0b-69c6-4e3e-a13b-6ac8b76e2f02" />
   <Project Path="SummerGameServer/SummerGameServer.csproj" />
   <Project Path="SummerLoginServer/SummerLoginServer.csproj" Id="7505cbe7-729f-4c1f-a245-ab3bdbaa6f4a" />
 </Solution>
