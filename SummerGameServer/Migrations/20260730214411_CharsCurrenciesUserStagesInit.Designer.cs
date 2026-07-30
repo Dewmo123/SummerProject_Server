@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SummerGameServer.DbContexts;
 
@@ -11,9 +12,11 @@ using SummerGameServer.DbContexts;
 namespace SummerGameServer.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserRoomDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260730214411_CharsCurrenciesUserStagesInit")]
+    partial class CharsCurrenciesUserStagesInit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,7 +47,7 @@ namespace SummerGameServer.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Characters", (string)null);
+                    b.ToTable("Characters");
                 });
 
             modelBuilder.Entity("Persistence.Entities.User", b =>
@@ -79,7 +82,7 @@ namespace SummerGameServer.Migrations
                     b.HasIndex("Provider", "ProviderUserId")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("SummerGameServer.Entities.Currency", b =>
@@ -95,7 +98,7 @@ namespace SummerGameServer.Migrations
 
                     b.HasKey("UserId", "Type");
 
-                    b.ToTable("Currencies", (string)null);
+                    b.ToTable("Currencies");
                 });
 
             modelBuilder.Entity("SummerGameServer.Entities.StageRun", b =>
@@ -129,7 +132,7 @@ namespace SummerGameServer.Migrations
 
                     b.HasIndex("UserId", "Status");
 
-                    b.ToTable("StageRuns", (string)null);
+                    b.ToTable("StageRuns");
                 });
 
             modelBuilder.Entity("SummerGameServer.Entities.UserRoom", b =>
@@ -152,7 +155,7 @@ namespace SummerGameServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserRooms", (string)null);
+                    b.ToTable("UserRooms");
                 });
 
             modelBuilder.Entity("Persistence.Entities.Character", b =>

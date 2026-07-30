@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Persistence.Entities;
 using Persistence.Configuration;
+using Persistence.Entities;
 
 namespace SummerLoginServer.DbContexts
 {
@@ -17,7 +17,6 @@ namespace SummerLoginServer.DbContexts
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfiguration(new UserConfiguration());
-            modelBuilder.ApplyConfiguration(new CharacterConfiguration());
         }
     }
 }

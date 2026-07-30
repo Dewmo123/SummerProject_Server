@@ -22,11 +22,13 @@ namespace SummerGameServer.Services
         private readonly UserDbContext _dbContext;
         private readonly CatalogManager _catalog;
         private readonly CharacterService _characterService;
-        public StageService(UserDbContext dbContext, CatalogManager catalog,CharacterService characterService)
+        private readonly CurrencyService _currencyService;
+        public StageService(UserDbContext dbContext, CatalogManager catalog,CharacterService characterService,CurrencyService currencyService)
         {
             _dbContext = dbContext;
             _catalog = catalog;
             _characterService = characterService;
+            _currencyService = currencyService;
         }
 
         //테스트용 스테이지 그냥 생으로 가져오기
@@ -66,18 +68,28 @@ namespace SummerGameServer.Services
             int starCount = (int)(maxHealth / currentHealth);
 
             long gainExp = 100;
+            gainExp = (gainExp * starCount) / maxStarCount;
+
             long gainGold = 10;
             gainGold = (gainGold * starCount) / maxStarCount;
-            gainExp = (gainExp * starCount) / maxStarCount;
-            CharacterCurrency currency = await _dbContext.Currencies.FirstAsync(u => u.UserId == userId && u.CurrencyType == CurrencyType.Gold);
-            currency.Amount += gainGold;
+            await _currencyService.AddAsync(userId, CurrencyType.Gold, gainGold);//무조건 성공
+            Dictionary<CurrencyType, long> currencyGained = new() { { CurrencyType.Gold, gainGold } };
 
             run.Status = StageRunStatus.Completed;
             run.CompletedAt = DateTime.UtcNow;
-            run.GoldGained = gainGold;
+            run.CurrenciesGained = JsonConvert.SerializeObject(currencyGained, CatalogManager.JsonSettings);
             run.ExpGained = gainExp;
             CharacterResponse? character = await _characterService.AddExpAsync(userId, (int)gainExp);
-
+            CurrenciesResponse response = (await _currencyService.GetOrCreateAllAsync(userId)).response!;
+            var result = new StageResultResponse
+            {
+                StageId = run.StageId,
+                ExpGained = gainExp,
+                Character = character!,
+                AllCurrencies = response,
+                GainCurrencies = new CurrenciesResponse { Currencies = currencyGained},
+            };
+            return (StageError.None, result);
         }
     }
 }

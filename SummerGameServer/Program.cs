@@ -18,6 +18,8 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddScoped<StageService>();
 builder.Services.AddScoped<CharacterService>();
+builder.Services.AddScoped<CurrencyService>();
+builder.Services.AddSingleton(CatalogManager.LoadFrom(builder.Environment.ContentRootPath));
 builder.Services.AddControllers();
 string mySqlConnection = builder.Configuration.GetConnectionString("MySql") ?? throw new Exception("MySql ConnectionString is null");
 builder.Services.AddDbContext<UserDbContext>(options => options.UseMySql(mySqlConnection, new MySqlServerVersion(new Version(8, 0, 41))));

@@ -15,9 +15,7 @@
         public DateTime StartedAt { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedAt { get; set; }
 
-        //정산 결과는 나중에 더 추가될수 잇음
-        public long GoldGained;
-
         public long ExpGained;
+        public string CurrenciesGained { get; set; } = null!;
     }
 }

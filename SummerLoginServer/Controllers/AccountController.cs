@@ -24,7 +24,7 @@ namespace SummerLoginServer.Controllers
             _jwtTokenService = jwtTokenService;
         }
         [HttpPost("login/google")]
-        public async Task<ActionResult<GoogleLoginResponse>> GoogleLogin(GoogleLoginRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> GoogleLogin(GoogleLoginRequest request, CancellationToken cancellationToken)
         {
             var googleUser = await _googleService.VerifyIdTokenAsync(request.IdToken,
                 cancellationToken);
@@ -50,6 +50,18 @@ namespace SummerLoginServer.Controllers
             }
             var token = _jwtTokenService.CreateAccessToken(user);
 
+            return Ok(new GoogleLoginResponse(user.Id, user.Username, token.Value, token.ExpiresAt));
+        }
+        [HttpGet("test")]
+        public async Task<IActionResult> TestLogin()
+        {
+            var user = await _dbContext.Users.SingleOrDefaultAsync(user=>user.Username == "Developer");
+
+            if (user == null)
+            {
+                return NotFound("개발자는 없습니다.");
+            }
+            var token = _jwtTokenService.CreateAccessToken(user);
             return Ok(new GoogleLoginResponse(user.Id, user.Username, token.Value, token.ExpiresAt));
         }
         private static string CreateInitialUsername(string subject)
