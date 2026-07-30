@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Persistence.Entities;
+using Persistence.Extensions;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,22 +10,7 @@ using System.Text;
 namespace SummerLoginServer.Services
 {
     public sealed record IssuedToken(string Value, DateTime ExpiresAt);
-    public sealed class JwtOptions
-    {
-        public static readonly string SectionName = "Jwt";
-        [Required]
-        public string Issuer { get; init; } = string.Empty;
 
-        [Required]
-        public string Audience { get; init; } = string.Empty;
-
-        [Required]
-        [MinLength(32)]
-        public string SigningKey { get; init; } = string.Empty;
-
-        [Range(1,1440)]
-        public int AccessTokenMinutes { get; init; } = 15;
-    }
     public class JwtTokenService
     {
         private readonly string _issuer;

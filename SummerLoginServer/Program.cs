@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Persistence.Extensions;
 using StackExchange.Redis;
 using SummerLoginServer.DbContexts;
 using SummerLoginServer.Services;
@@ -77,45 +78,6 @@ namespace SummerLoginServer
             app.MapGet("/", () => "SummerLoginServer is running");
 
             app.Run();
-        }
-    }
-    public static class AuthenticationExtensions
-    {
-        public static IServiceCollection AddAppJwtAuthentication(this IServiceCollection services,IConfiguration configuration)
-        {
-            services.AddOptions<JwtOptions>()
-                .Bind(configuration.GetRequiredSection(JwtOptions.SectionName))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer();
-
-            services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-                .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptionsAccessor) =>
-                {
-                    var jwt = jwtOptionsAccessor.Value;
-
-                    bearerOptions.MapInboundClaims = false;
-                    bearerOptions.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidIssuer = jwt.Issuer,
-
-                        ValidateAudience = true,
-                        ValidAudience = jwt.Audience,
-
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.FromSeconds(30),
-
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey))
-                    };
-                });
-
-            services.AddAuthentication();
-
-            return services;
         }
     }
 }

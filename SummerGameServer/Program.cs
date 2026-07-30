@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Persistence.Extensions;
 using SummerGameServer.DbContexts;
 using SummerGameServer.Services;
+using System.ComponentModel.DataAnnotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +18,13 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+
 builder.Services.AddScoped<StageService>();
 builder.Services.AddScoped<CharacterService>();
 builder.Services.AddScoped<CurrencyService>();
 builder.Services.AddSingleton(CatalogManager.LoadFrom(builder.Environment.ContentRootPath));
 builder.Services.AddControllers();
+builder.Services.AddAppJwtAuthentication(builder.Configuration);
 string mySqlConnection = builder.Configuration.GetConnectionString("MySql") ?? throw new Exception("MySql ConnectionString is null");
 builder.Services.AddDbContext<UserDbContext>(options => options.UseMySql(mySqlConnection, new MySqlServerVersion(new Version(8, 0, 41))));
 var app = builder.Build();
