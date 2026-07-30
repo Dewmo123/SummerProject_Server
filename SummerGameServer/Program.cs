@@ -15,6 +15,7 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.AddScoped<StageService>();
+builder.Services.AddControllers();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -26,7 +27,8 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "SummerGameServer");
     });
 }
-
+app.MapControllers();
+app.MapGet("/", () => "SummerGamenServer is running");
 app.UseHttpsRedirection();
 
 app.Run();

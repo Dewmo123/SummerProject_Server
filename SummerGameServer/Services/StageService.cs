@@ -1,10 +1,16 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using SummerGameServer.Models;
 
 namespace SummerGameServer.Services
 {
     public class StageService
     {
+        public static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore
+        };
         public RoomData GetStage(int stageId)
         {
             if (stageId <= 0)
@@ -22,10 +28,9 @@ namespace SummerGameServer.Services
             try
             {
                 string json = File.ReadAllText(filePath);
-                RoomData? roomData = JsonConvert.DeserializeObject<RoomData>(json);
+                RoomData? roomData = JsonConvert.DeserializeObject<RoomData>(json, JsonSettings);
                 if (roomData == null)
                     throw new NullReferenceException($"Stage{stageId}.json에서 RoomData를 읽을 수 없습니다.");
-
                 return roomData;
             }
             catch (JsonException exception)
@@ -50,7 +55,7 @@ namespace SummerGameServer.Services
             try
             {
                 string json = File.ReadAllText(filePath);
-                MapData? mapData = JsonConvert.DeserializeObject<MapData>(json);
+                MapData? mapData = JsonConvert.DeserializeObject<MapData>(json, JsonSettings);
                 if (mapData == null)
                     throw new NullReferenceException($"Map{mapId}.json에서 MapData를 읽을 수 없습니다.");
 
