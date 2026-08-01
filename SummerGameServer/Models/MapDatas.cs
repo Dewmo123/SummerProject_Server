@@ -11,7 +11,6 @@ namespace SummerGameServer.Models
     {
         SawTrap,
     }
-    public sealed record UploadUserRoomRequest(int MapId, TrapData[] TrapDatas);
     public struct Vector3Int
     {
         public int x { get; set; }

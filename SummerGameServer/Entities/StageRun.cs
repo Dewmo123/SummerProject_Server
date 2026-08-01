@@ -16,6 +16,6 @@
         public DateTime? CompletedAt { get; set; }
 
         public long ExpGained;
-        public string CurrenciesGained { get; set; } = null!;
+        public string? CurrenciesGained { get; set; } 
     }
 }

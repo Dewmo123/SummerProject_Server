@@ -35,6 +35,7 @@ namespace SummerGameServer.Services
                 await _dbContext.Currencies.AddAsync(currency);
                 currencies.Add(type, currency);
             }
+            await _dbContext.SaveChangesAsync();
             return (CurrencyError.None, new CurrenciesResponse()
             {
                 Currencies = currencies

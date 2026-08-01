@@ -27,7 +27,6 @@ namespace SummerGameServer.DbContexts
                 .HasColumnType("json");
             modelBuilder.Entity<StageRun>()
                 .HasIndex(run => new { run.UserId, run.Status }); //키인덱스로 UserId와 Status를 조합한다.
-
             modelBuilder.Entity<Currency>()
                 .HasKey(currency => new { currency.UserId, currency.Type });
         }
