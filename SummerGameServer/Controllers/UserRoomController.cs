@@ -16,11 +16,9 @@ namespace SummerGameServer.Controllers
     public class UserRoomController : ControllerBase
     {
         private UserDbContext _dbContext;
-        private StageService _stageService;
         public UserRoomController(UserDbContext dbContext,StageService stageService)
         {
             _dbContext = dbContext;
-            _stageService = stageService;
         }
         [HttpPost]
         public async Task<IActionResult> UpsertUserRoom(UploadUserRoomRequest request)

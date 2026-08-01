@@ -6,4 +6,9 @@ namespace SummerGameServer.Models
     {
         public Dictionary<CurrencyType, long> Currencies { get; set; } = new();
     }
+    public record CurrencyResponse
+    {
+        public CurrencyType Type { get; set; }
+        public long Amount { get; set; }
+    }
 }

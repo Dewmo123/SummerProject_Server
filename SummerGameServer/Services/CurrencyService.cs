@@ -9,7 +9,8 @@ namespace SummerGameServer.Services
     {
         None = 0,
         UserNotFound,
-        LackOfCurrency
+        LackOfCurrency,
+        InvalidCurrency
     }
     public class CurrencyService
     {
@@ -41,8 +42,17 @@ namespace SummerGameServer.Services
                 currencies => currencies.Value.Amount)
             });
         }
+        public async Task<(CurrencyError error, CurrencyResponse? response)> GetByUserIdAsync(int userId, CurrencyType type)
+        {
+            (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId,type);
+            if (error != CurrencyError.None || currency is null)
+                return (error, null);
+            return (CurrencyError.None, new CurrencyResponse() { Amount = currency.Amount, Type = type });
+        }
         public async Task<(CurrencyError error, Currency? currency)> GetOrCreateAsync(int userId, CurrencyType type)
         {
+            if (!Enum.IsDefined(type))
+                return (CurrencyError.InvalidCurrency, null);
             Currency? currency = await _dbContext.Currencies.SingleOrDefaultAsync(currency => currency.UserId == userId && currency.Type == type);
             if (currency != null)
                 return (CurrencyError.None, currency);
@@ -58,6 +68,8 @@ namespace SummerGameServer.Services
         }
         public async Task<(CurrencyError error, Currency? currency)> AddAsync(int userId, CurrencyType type, long amount)
         {
+            if (!Enum.IsDefined(type))
+                return (CurrencyError.InvalidCurrency, null);
             var item = await GetOrCreateAsync(userId, type);
             if (item.error != CurrencyError.None || item.currency == null)
                 return (CurrencyError.None, null);
@@ -67,6 +79,8 @@ namespace SummerGameServer.Services
         }
         public async Task<(CurrencyError error, Currency? currency)> RemoveAsync(int userId, CurrencyType type, long amount)
         {
+            if (!Enum.IsDefined(type))
+                return (CurrencyError.InvalidCurrency, null);
             var item = await GetOrCreateAsync(userId, type);
             if (item.error != CurrencyError.None || item.currency == null)
                 return (CurrencyError.None, null);

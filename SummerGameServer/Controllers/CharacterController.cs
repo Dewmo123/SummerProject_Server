@@ -17,7 +17,7 @@ namespace SummerGameServer.Controllers
             _characterService = characterService;
         }
         [HttpGet("me")]
-        public async Task<IActionResult> Me()
+        public async Task<ActionResult<CharacterResponse>> Me()
         {
             if (User.TryGetUserId(out int userId))
                 return Unauthorized();
@@ -27,7 +27,7 @@ namespace SummerGameServer.Controllers
             return Ok(character);
         }
         [HttpPost("me/gain-exp")]
-        public async Task<IActionResult> GainExp(GainExpRequest request)
+        public async Task<ActionResult<CharacterResponse>> GainExp(GainExpRequest request)
         {
             if (User.TryGetUserId(out int userId))
                 return Unauthorized();

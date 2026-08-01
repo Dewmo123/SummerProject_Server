@@ -22,7 +22,7 @@ namespace SummerGameServer.Controllers
             return new GetStageResponse(stageData.Width,stageData.Height,stageData.TileDatas,stageData.Trapdatas);
         }
         [HttpPost("{stageId:int}/enter")]
-        public async Task<IActionResult> Enter(int stageId)
+        public async Task<ActionResult<StageEnterResponse>> Enter(int stageId)
         {
             if (!User.TryGetUserId(out int userId))
                 return Unauthorized();
@@ -33,7 +33,7 @@ namespace SummerGameServer.Controllers
             return Ok(response);
         }
         [HttpPost("runs/{runId:int}/complete")]
-        public async Task<IActionResult> Complete(int runId,[FromBody]StageResultRequest req)
+        public async Task<ActionResult<StageResultResponse>> Complete(int runId,[FromBody]StageResultRequest req)
         {
             if (!User.TryGetUserId(out int userId))
                 return Unauthorized();
