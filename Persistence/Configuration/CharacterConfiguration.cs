@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Persistence.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Persistence.Configuration
 {
@@ -11,6 +8,13 @@ namespace Persistence.Configuration
     {
         public void Configure(EntityTypeBuilder<Character> builder)
         {
+            builder.HasIndex(character => character.UserId)
+                .IsUnique();
+
+            builder.HasOne(character => character.User)
+                .WithOne()
+                .HasForeignKey<Character>(character => character.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

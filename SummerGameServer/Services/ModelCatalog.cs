@@ -8,7 +8,7 @@ namespace SummerGameServer.Services
     }
     public class ModelCatalog<T> : ICatalog where T : ICatalogModel
     {
-        private IReadOnlyDictionary<int, T> _models;
+        private readonly IReadOnlyDictionary<int, T> _models;
         public ModelCatalog(IReadOnlyDictionary<int, T> models)
         {
             _models = models;

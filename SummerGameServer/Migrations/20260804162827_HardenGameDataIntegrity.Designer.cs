@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SummerGameServer.DbContexts;
 
@@ -11,9 +12,11 @@ using SummerGameServer.DbContexts;
 namespace SummerGameServer.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserRoomDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260804162827_HardenGameDataIntegrity")]
+    partial class HardenGameDataIntegrity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

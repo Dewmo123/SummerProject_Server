@@ -1,76 +1,89 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Entities;
 using SummerLoginServer.DbContexts;
 using SummerLoginServer.Models;
 using SummerLoginServer.Services;
+using System.Security.Cryptography;
+using System.Text;
 
-namespace SummerLoginServer.Controllers
+namespace SummerLoginServer.Controllers;
+
+[ApiController]
+[Route("api/account")]
+public sealed class AccountController(
+    UserDbContext dbContext,
+    GoogleService googleService,
+    JwtTokenService jwtTokenService) : ControllerBase
 {
-    [ApiController]
-    [Route("api/account")]
-    public class AccountController : ControllerBase
+    [HttpPost("login/google")]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> GoogleLogin(
+        GoogleLoginRequest request,
+        CancellationToken cancellationToken)
     {
-        private readonly UserDbContext _dbContext;
-        private readonly GoogleService _googleService;
-        private readonly JwtTokenService _jwtTokenService;
-        public AccountController(
-            UserDbContext dbContext,
-            GoogleService googleService,
-            JwtTokenService jwtTokenService)
+        GoogleUserInfo? googleUser = await googleService.VerifyIdTokenAsync(
+            request.IdToken,
+            cancellationToken);
+        if (googleUser is null)
+            return Unauthorized(new { message = "Invalid Google ID Token" });
+
+        User? user = await dbContext.Users.SingleOrDefaultAsync(
+            candidate => candidate.Provider == LoginProvider.Google &&
+                         candidate.ProviderUserId == googleUser.Subject,
+            cancellationToken);
+
+        if (user is null)
         {
-            _dbContext = dbContext;
-            _googleService = googleService;
-            _jwtTokenService = jwtTokenService;
-        }
-        [HttpPost("login/google")]
-        public async Task<IActionResult> GoogleLogin(GoogleLoginRequest request, CancellationToken cancellationToken)
-        {
-            var googleUser = await _googleService.VerifyIdTokenAsync(request.IdToken,
-                cancellationToken);
-
-            if (googleUser == null)
-                return Unauthorized(new { message = "Invalid Google ID Token" });
-
-            var user = await _dbContext.Users.SingleOrDefaultAsync(
-                u => u.Provider == LoginProvider.Google
-                && u.ProviderUserId == googleUser.Subject, cancellationToken);
-
-            if(user == null)
+            user = new User
             {
-                user = new User
-                {
-                    Username = CreateInitialUsername(googleUser.Subject),
-                    Provider = LoginProvider.Google,
-                    ProviderUserId = googleUser.Subject,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _dbContext.Users.Add(user);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
-            var token = _jwtTokenService.CreateAccessToken(user);
+                Username = CreateInitialUsername(googleUser.Subject),
+                Provider = LoginProvider.Google,
+                ProviderUserId = googleUser.Subject,
+                CreatedAt = DateTime.UtcNow
+            };
+            dbContext.Users.Add(user);
 
-            return Ok(new GoogleLoginResponse(user.Id, user.Username, token.Value, token.ExpiresAt));
-        }
-        [HttpGet("test")]
-        public async Task<IActionResult> TestLogin()
-        {
-            var user = await _dbContext.Users.SingleOrDefaultAsync(user=>user.Username == "Developer");
-
-            if (user == null)
+            try
             {
-                return NotFound("개발자는 없습니다.");
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
-            var token = _jwtTokenService.CreateAccessToken(user);
-            return Ok(new GoogleLoginResponse(user.Id, user.Username, token.Value, token.ExpiresAt));
+            catch (DbUpdateException)
+            {
+                // 동일 계정의 동시 최초 로그인은 unique index가 한 요청만 허용한다.
+                dbContext.ChangeTracker.Clear();
+                user = await dbContext.Users.SingleOrDefaultAsync(
+                    candidate => candidate.Provider == LoginProvider.Google &&
+                                 candidate.ProviderUserId == googleUser.Subject,
+                    cancellationToken);
+                if (user is null)
+                    throw;
+            }
         }
-        private static string CreateInitialUsername(string subject)
-        {
-            var suffix = subject.Length <= 20
-                ? subject
-                : subject[^20..];
 
-            return $"google_{suffix}";
-        }
+        IssuedToken token = jwtTokenService.CreateAccessToken(user);
+        return Ok(new GoogleLoginResponse(user.Id, user.Username, token.Value, token.ExpiresAt));
+    }
+
+    // 사용자 요청에 따라 개발용 토큰 엔드포인트는 유지한다.
+    [HttpGet("test")]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> TestLogin(CancellationToken cancellationToken)
+    {
+        User? user = await dbContext.Users.SingleOrDefaultAsync(
+            candidate => candidate.Username == "Developer",
+            cancellationToken);
+        if (user is null)
+            return NotFound("개발자는 없습니다.");
+
+        IssuedToken token = jwtTokenService.CreateAccessToken(user);
+        return Ok(new GoogleLoginResponse(user.Id, user.Username, token.Value, token.ExpiresAt));
+    }
+
+    private static string CreateInitialUsername(string subject)
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(subject));
+        return $"google_{Convert.ToHexString(hash.AsSpan(0, 12)).ToLowerInvariant()}";
     }
 }

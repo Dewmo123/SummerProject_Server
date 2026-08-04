@@ -1,83 +1,85 @@
-﻿
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpLogging;
+﻿using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Persistence.Extensions;
-using StackExchange.Redis;
 using SummerLoginServer.DbContexts;
 using SummerLoginServer.Services;
-using System.Text;
+using System.Threading.RateLimiting;
 
-namespace SummerLoginServer
+namespace SummerLoginServer;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddHttpLogging(options =>
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddHttpLogging(options =>
+            options.LoggingFields =
+                HttpLoggingFields.RequestMethod |
+                HttpLoggingFields.RequestPath |
+                HttpLoggingFields.ResponseStatusCode |
+                HttpLoggingFields.Duration;
+            options.CombineLogs = true;
+        });
+        builder.Services.AddControllers();
+        builder.Services.AddProblemDetails();
+        builder.Services.AddHealthChecks();
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.AddPolicy("login", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
+        builder.Services.AddOpenApi(options =>
+        {
+            options.AddDocumentTransformer((document, _, _) =>
             {
-                options.LoggingFields =
-                    HttpLoggingFields.RequestMethod |
-                    HttpLoggingFields.RequestPath |
-                    HttpLoggingFields.RequestQuery |
-                    HttpLoggingFields.ResponseStatusCode |
-                    HttpLoggingFields.Duration;
-
-                // 요청과 응답 정보를 한 로그로 합침
-                options.CombineLogs = true;
+                document.Info.Title = "SummerLoginServer";
+                document.Info.Version = "0.0.1";
+                document.Info.Description = "여름방학 비동기 멀티플젝 로그인 서버";
+                return Task.CompletedTask;
             });
-            builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi(options =>
-            {
-                options.AddDocumentTransformer((document, context, ct) =>
-                {
-                    document.Info.Title = "SummerLoginServer";
-                    document.Info.Version = "0.0.1";
-                    document.Info.Description = "여름방학 비동기 멀티플젝 로그인 서버";
-                    return Task.CompletedTask;
-                });
-            });
+        });
 
-            string? connectionString = builder.Configuration.GetConnectionString("MySql")
-                ?? throw new InvalidOperationException("Connection string MySql not found");
-            builder.Services.AddDbContext<UserDbContext>(options =>
-            {
-                options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 41)));
-            });
-            //string? redisConnection = builder.Configuration.GetConnectionString("Redis")
-            //    ?? throw new InvalidOperationException("Connection string MySql not found");
+        string connectionString = builder.Configuration.GetConnectionString("MySql")
+            ?? throw new InvalidOperationException("MySql connection string is missing.");
+        builder.Services.AddDbContext<UserDbContext>(options =>
+            options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 41))));
 
-            builder.Services.AddAppJwtAuthentication(builder.Configuration);
+        builder.Services.AddAppJwtAuthentication(builder.Configuration);
+        builder.Services.AddSingleton<JwtTokenService>();
+        builder.Services.AddScoped<GoogleService>();
 
-            //builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
-            builder.Services.AddSingleton<JwtTokenService>();
-            builder.Services.AddScoped<GoogleService>();
-            var app = builder.Build();
+        WebApplication app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            //if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/openapi/v1.json", "SummerLoginServer");
-                });
-            }
-            app.UseHttpLogging();
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-            app.MapControllers();
-            app.MapGet("/", () => "SummerLoginServer is running");
-
-            app.Run();
+        //if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+            app.UseSwaggerUI(options =>
+                options.SwaggerEndpoint("/openapi/v1.json", "SummerLoginServer"));
         }
+        app.UseExceptionHandler();
+        app.UseHsts();
+
+        app.UseHttpLogging();
+        app.UseHttpsRedirection();
+        app.UseRateLimiter();
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.MapControllers();
+        app.MapHealthChecks("/health");
+        app.MapGet("/", () => "SummerLoginServer is running");
+
+        app.Run();
     }
 }

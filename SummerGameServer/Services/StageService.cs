@@ -1,96 +1,130 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Persistence.Entities;
 using SummerGameServer.DbContexts;
 using SummerGameServer.Models.DAOs;
 using SummerGameServer.Models.DTOs;
 using SummerGameServer.Models.VOs;
+using System.Data;
 
-namespace SummerGameServer.Services
+namespace SummerGameServer.Services;
+
+public enum StageError
 {
-    public enum StageError
+    None = 0,
+    StageNotFound,
+    RunNotFound,
+    NotYourRun,
+    AlreadyCompleted,
+    TooEarly,
+    UserNotFound,
+    RewardFailed
+}
+
+public sealed class StageService(UserDbContext dbContext, CatalogManager catalog, CharacterService characterService, CurrencyService currencyService)
+{
+    public StageVO? GetStage(int stageId) => catalog.GetCatalogModel<StageVO>(stageId);
+
+    public async Task<(StageError error, StageEnterResponse? response)> EnterAsync(int userId, int stageId, CancellationToken cancellationToken = default)
     {
-        None = 0,
-        StageNotFound, 
-        RunNotFound, 
-        NotYourRun, 
-        AlreadyCompleted,
+        StageVO? stageData = catalog.GetCatalogModel<StageVO>(stageId);
+        if (stageData is null)
+            return (StageError.StageNotFound, null);
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.ReadCommitted,
+            cancellationToken);
+
+        User? user = await dbContext.Users
+            .FromSqlInterpolated($"SELECT * FROM `Users` WHERE `Id` = {userId} FOR UPDATE")
+            .AsNoTracking()
+            .SingleOrDefaultAsync(cancellationToken);
+        if (user is null)
+            return (StageError.UserNotFound, null);
+
+        await dbContext.StageRuns
+            .Where(run => run.UserId == userId && run.Status == StageRunStatus.InProgress)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(run => run.Status, StageRunStatus.Abandoned)
+                    .SetProperty(run => run.CompletedAt, DateTime.UtcNow),
+                cancellationToken);
+
+        StageRun run = new() { UserId = userId, StageId = stageId };
+        dbContext.StageRuns.Add(run);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return (StageError.None, StageEnterResponse.From(run.Id, stageData));
     }
 
-    public class StageService
+    public async Task<(StageError error, StageResultResponse? result)> CompleteAsync(int userId, int runId, CancellationToken cancellationToken = default)
     {
-        private readonly UserDbContext _dbContext;
-        private readonly CatalogManager _catalog;
-        private readonly CharacterService _characterService;
-        private readonly CurrencyService _currencyService;
-        public StageService(UserDbContext dbContext, CatalogManager catalog,CharacterService characterService,CurrencyService currencyService)
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.ReadCommitted,
+            cancellationToken);//여러 테이블을 동시성 지켜서 업데이트 하므로 트랜잭션 사용
+
+        StageRun? run = await dbContext.StageRuns
+            .AsNoTracking() //엔티티의 상태를 기억하지 않으므로 효율적
+            .SingleOrDefaultAsync(candidate => candidate.Id == runId, cancellationToken);
+        if (run is null)
+            return (StageError.RunNotFound, null);
+        if (run.UserId != userId)
+            return (StageError.NotYourRun, null);
+        if (run.Status != StageRunStatus.InProgress)
+            return (StageError.AlreadyCompleted, null);
+
+        StageVO? stage = catalog.GetCatalogModel<StageVO>(run.StageId);
+        if (stage is null)
+            return (StageError.StageNotFound, null);
+
+        DateTime completedAt = DateTime.UtcNow;
+        if (completedAt - run.StartedAt < TimeSpan.FromSeconds(stage.MinimumClearSeconds))
+            return (StageError.TooEarly, null);
+
+        Dictionary<CurrencyType, long> currencyGained = new()
         {
-            _dbContext = dbContext;
-            _catalog = catalog;
-            _characterService = characterService;
-            _currencyService = currencyService;
-        }
+            [CurrencyType.Gold] = stage.RewardGold
+        };
+        string serializedCurrencies = JsonConvert.SerializeObject(currencyGained, CatalogManager.JsonSettings);
 
-        //테스트용 스테이지 그냥 생으로 가져오기
-        public StageVO? GetStage(int stageId)
+        int claimed = await dbContext.StageRuns
+            .Where(candidate =>
+                candidate.Id == runId &&
+                candidate.UserId == userId &&
+                candidate.Status == StageRunStatus.InProgress)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(candidate => candidate.Status, StageRunStatus.Completed)
+                    .SetProperty(candidate => candidate.CompletedAt, completedAt)
+                    .SetProperty(candidate => candidate.CurrenciesGained, serializedCurrencies)
+                    .SetProperty(candidate => candidate.ExpGained, stage.RewardExp),
+                cancellationToken);
+        if (claimed != 1)
+            return (StageError.AlreadyCompleted, null);
+
+        (CurrencyError currencyError, _) = await currencyService.AddAsync(userId, CurrencyType.Gold, stage.RewardGold, cancellationToken);
+        if (currencyError != CurrencyError.None)
+            return (StageError.RewardFailed, null);
+
+        CharacterResponse? character = await characterService.AddExpAsync(userId, stage.RewardExp, cancellationToken);
+        if (character is null)
+            return (StageError.UserNotFound, null);
+
+        (CurrencyError allCurrencyError, CurrenciesResponse? allCurrencies) =
+            await currencyService.GetOrCreateAllAsync(userId, cancellationToken);
+        if (allCurrencyError != CurrencyError.None || allCurrencies is null)
+            return (StageError.RewardFailed, null);
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return (StageError.None, new StageResultResponse
         {
-            return _catalog.GetCatalogModel<StageVO>(stageId);
-        }
-        //실제 스테이지 입장 종료 처리 다 하는 거시기 플레이하는거
-        public async Task<StageEnterResponse?> EnterAsync(int userId, int stageId)
-        {
-            StageVO? stageData = _catalog.GetCatalogModel<StageVO>(stageId);
-            if (stageData is null)
-                return null;
-            StageRun run = new StageRun() { UserId = userId, StageId = stageId };
-            _dbContext.StageRuns.Add(run);
-            await _dbContext.SaveChangesAsync();
-
-            return StageEnterResponse.From(run.Id, stageData, _catalog);
-        }
-        public async Task<(StageError error, StageResultResponse? result)> CompleteAsync(int userId, int runId, StageResultRequest req) 
-        {
-            StageRun? run = await _dbContext.StageRuns.FirstOrDefaultAsync(run => run.Id == runId);
-            if (run is null)
-                return (StageError.RunNotFound, null);
-            else if(run.UserId != userId)
-                return (StageError.NotYourRun, null);
-            else if(run.Status != StageRunStatus.InProgress)
-                return (StageError.AlreadyCompleted, null);
-
-            StageVO? stage = _catalog.GetCatalogModel<StageVO>(run.StageId);
-            if (stage is null)
-                return (StageError.StageNotFound, null);
-            //여기서 유저가 남은 체력을 기반으로 보상 계산
-            const int maxStarCount = 3;//임시 별 3개 가정
-            float currentHealth = 30;
-            float maxHealth = 100;
-            int starCount = (int)(maxHealth / currentHealth);
-
-            long gainExp = 100;
-            gainExp = (gainExp * starCount) / maxStarCount;
-
-            long gainGold = 10;
-            gainGold = (gainGold * starCount) / maxStarCount;
-            await _currencyService.AddAsync(userId, CurrencyType.Gold, gainGold);//무조건 성공
-            Dictionary<CurrencyType, long> currencyGained = new() { { CurrencyType.Gold, gainGold } };
-
-            run.Status = StageRunStatus.Completed;
-            run.CompletedAt = DateTime.UtcNow;
-            run.CurrenciesGained = JsonConvert.SerializeObject(currencyGained, CatalogManager.JsonSettings);
-            run.ExpGained = gainExp;
-            CharacterResponse? character = await _characterService.AddExpAsync(userId, (int)gainExp);
-            CurrenciesResponse response = (await _currencyService.GetOrCreateAllAsync(userId)).response!;
-            var result = new StageResultResponse
-            {
-                StageId = run.StageId,
-                ExpGained = gainExp,
-                Character = character!,
-                AllCurrencies = response,
-                GainCurrencies = new CurrenciesResponse { Currencies = currencyGained},
-            };
-            return (StageError.None, result);
-        }
+            StageId = run.StageId,
+            ExpGained = stage.RewardExp,
+            Character = character,
+            AllCurrencies = allCurrencies,
+            GainCurrencies = new CurrenciesResponse { Currencies = currencyGained }
+        });
     }
 }

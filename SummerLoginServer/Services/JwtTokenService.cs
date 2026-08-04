@@ -25,13 +25,15 @@ namespace SummerLoginServer.Services
             _audience = jwtOptions.Audience;
             _accessTokenLifetime = TimeSpan.FromMinutes(jwtOptions.AccessTokenMinutes);
 
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
-
-            _signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
+            _signingCredentials = new SigningCredentials(
+                signingKey,
+                SecurityAlgorithms.HmacSha256);
         }
         public IssuedToken CreateAccessToken(User user)
         {
-            var expiresAt = DateTime.Now.Add(_accessTokenLifetime);
+            var expiresAt = DateTime.UtcNow.Add(_accessTokenLifetime);
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -41,8 +43,8 @@ namespace SummerLoginServer.Services
             };
 
             var jwt = new JwtSecurityToken(
-                _issuer,     //private 키를 생성한 사람? (로그인 서버)
-                _audience,   //public 토큰을 사용할 대상 (게임 서버)
+                _issuer,
+                _audience,
                 claims,
                 notBefore: DateTime.UtcNow,
                 expires: expiresAt,

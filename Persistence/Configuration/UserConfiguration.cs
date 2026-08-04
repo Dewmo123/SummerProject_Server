@@ -19,9 +19,6 @@ namespace Persistence.Configuration
 
             builder.Property(u => u.ProviderUserId)
                 .HasMaxLength(255);
-            builder.HasOne(u => u.Character)
-                .WithOne(c=>c.User)
-                .HasForeignKey<Character>(c=>c.UserId);
         }
     }
 }

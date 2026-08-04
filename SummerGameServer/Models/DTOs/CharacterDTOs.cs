@@ -1,5 +1,4 @@
 ﻿using Persistence.Entities;
-using System.ComponentModel.DataAnnotations;
 
 namespace SummerGameServer.Models.DTOs
 {
@@ -14,10 +13,5 @@ namespace SummerGameServer.Models.DTOs
             Exp = c.Exp,
             ExpToNextLevel = expToNextLevel
         };
-    }
-    public class GainExpRequest
-    {
-        [Range(1, 1_000_000, ErrorMessage = "경험치는 1 이상이어야 합니다.")]
-        public int Amount { get; set; }
     }
 }

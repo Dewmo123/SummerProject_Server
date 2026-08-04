@@ -32,7 +32,7 @@ namespace SummerGameServer.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-           
+
             migrationBuilder.CreateTable(
                 name: "Characters",
                 columns: table => new

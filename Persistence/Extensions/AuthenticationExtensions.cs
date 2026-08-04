@@ -56,11 +56,10 @@ namespace Persistence.Extensions
                         ClockSkew = TimeSpan.FromSeconds(30),
 
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey))
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(jwt.SigningKey))
                     };
                 });
-
-            services.AddAuthentication();
 
             return services;
         }

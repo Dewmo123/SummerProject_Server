@@ -1,97 +1,128 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SummerGameServer.DbContexts;
 using SummerGameServer.Models.DAOs;
 using SummerGameServer.Models.DTOs;
 
-namespace SummerGameServer.Services
+namespace SummerGameServer.Services;
+
+public enum CurrencyError
 {
-    public enum CurrencyError
+    None = 0,
+    UserNotFound,
+    LackOfCurrency,
+    InvalidCurrency,
+    InvalidAmount,
+    Overflow
+}
+
+public sealed class CurrencyService(UserDbContext dbContext)
+{
+    public async Task<(CurrencyError error, CurrenciesResponse? response)> GetOrCreateAllAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
     {
-        None = 0,
-        UserNotFound,
-        LackOfCurrency,
-        InvalidCurrency
+        if (!await UserExistsAsync(userId, cancellationToken))
+            return (CurrencyError.UserNotFound, null);
+
+        foreach (CurrencyType type in Enum.GetValues<CurrencyType>())
+        {
+            await dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT IGNORE INTO `Currencies` (`UserId`, `Type`, `Amount`) VALUES ({userId}, {(int)type}, 0)",
+                cancellationToken);
+        }
+
+        Dictionary<CurrencyType, long> currencies = await dbContext.Currencies
+            .AsNoTracking()
+            .Where(currency => currency.UserId == userId)
+            .ToDictionaryAsync(currency => currency.Type, currency => currency.Amount, cancellationToken);
+
+        return (CurrencyError.None, new CurrenciesResponse { Currencies = currencies });
     }
-    public class CurrencyService
+
+    public async Task<(CurrencyError error, CurrencyResponse? response)> GetByUserIdAsync(
+        int userId,
+        CurrencyType type,
+        CancellationToken cancellationToken = default)
     {
-        private readonly UserDbContext _dbContext;
-        public CurrencyService(UserDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-        public async Task<(CurrencyError error, CurrenciesResponse? response)> GetOrCreateAllAsync(int userId)
-        {
-            bool userExists = await _dbContext.Users.AnyAsync(user => user.Id == userId);
-            if (!userExists)
-                return (CurrencyError.UserNotFound, null);
-            Dictionary<CurrencyType, Currency> currencies
-                = _dbContext.Currencies.Where(currency => currency.UserId == userId)
-                .ToDictionary(currency => currency.Type);
-            foreach (var type in Enum.GetValues<CurrencyType>())
-            {
-                if (currencies.ContainsKey(type))
-                    continue;
-                Currency currency = new() { UserId = userId, Type = type };
-                await _dbContext.Currencies.AddAsync(currency);
-                currencies.Add(type, currency);
-            }
-            await _dbContext.SaveChangesAsync();
-            return (CurrencyError.None, new CurrenciesResponse()
-            {
-                Currencies = currencies
-                .ToDictionary(currencies => currencies.Key,
-                currencies => currencies.Value.Amount)
-            });
-        }
-        public async Task<(CurrencyError error, CurrencyResponse? response)> GetByUserIdAsync(int userId, CurrencyType type)
-        {
-            (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId,type);
-            if (error != CurrencyError.None || currency is null)
-                return (error, null);
-            return (CurrencyError.None, new CurrencyResponse() { Amount = currency.Amount, Type = type });
-        }
-        public async Task<(CurrencyError error, Currency? currency)> GetOrCreateAsync(int userId, CurrencyType type)
-        {
-            if (!Enum.IsDefined(type))
-                return (CurrencyError.InvalidCurrency, null);
-            Currency? currency = await _dbContext.Currencies.SingleOrDefaultAsync(currency => currency.UserId == userId && currency.Type == type);
-            if (currency != null)
-                return (CurrencyError.None, currency);
-            bool userExists = await _dbContext.Users.AnyAsync(user => user.Id == userId);
-            if (!userExists)
-                return (CurrencyError.UserNotFound, currency);
-
-            currency = new Currency() { Type = type, UserId = userId };
-            await _dbContext.Currencies.AddAsync(currency);
-            await _dbContext.SaveChangesAsync();
-
-            return (CurrencyError.None, currency);
-        }
-        public async Task<(CurrencyError error, Currency? currency)> AddAsync(int userId, CurrencyType type, long amount)
-        {
-            if (!Enum.IsDefined(type))
-                return (CurrencyError.InvalidCurrency, null);
-            var item = await GetOrCreateAsync(userId, type);
-            if (item.error != CurrencyError.None || item.currency == null)
-                return item;
-            item.currency.Amount += Math.Abs(amount);
-            await _dbContext.SaveChangesAsync();
-            return item;
-        }
-        public async Task<(CurrencyError error, Currency? currency)> RemoveAsync(int userId, CurrencyType type, long amount)
-        {
-            if (!Enum.IsDefined(type))
-                return (CurrencyError.InvalidCurrency, null);
-            var item = await GetOrCreateAsync(userId, type);
-            if (item.error != CurrencyError.None || item.currency == null)
-                return item;
-            long remain = item.currency.Amount - Math.Abs(amount);
-            if (remain < 0)
-                return (CurrencyError.LackOfCurrency, null);
-            item.currency.Amount = remain;
-            await _dbContext.SaveChangesAsync();
-            return item;
-        }
-
+        (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
+        return error != CurrencyError.None || currency is null
+            ? (error, null)
+            : (CurrencyError.None, new CurrencyResponse { Amount = currency.Amount, Type = type });
     }
+
+    public async Task<(CurrencyError error, Currency? currency)> GetOrCreateAsync(
+        int userId,
+        CurrencyType type,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(type))
+            return (CurrencyError.InvalidCurrency, null);
+        if (!await UserExistsAsync(userId, cancellationToken))
+            return (CurrencyError.UserNotFound, null);
+
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT IGNORE INTO `Currencies` (`UserId`, `Type`, `Amount`) VALUES ({userId}, {(int)type}, 0)",
+            cancellationToken);
+
+        Currency? currency = await FindAsync(userId, type, cancellationToken);
+        return currency is null
+            ? (CurrencyError.UserNotFound, null)
+            : (CurrencyError.None, currency);
+    }
+
+    public async Task<(CurrencyError error, Currency? currency)> AddAsync(
+        int userId,
+        CurrencyType type,
+        long amount,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(type))
+            return (CurrencyError.InvalidCurrency, null);
+        if (amount <= 0)
+            return (CurrencyError.InvalidAmount, null);
+
+        (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
+        if (error != CurrencyError.None || currency is null)
+            return (error, null);
+
+        int affected = await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE `Currencies` SET `Amount` = `Amount` + {amount} WHERE `UserId` = {userId} AND `Type` = {(int)type} AND `Amount` <= {long.MaxValue - amount}",
+            cancellationToken);
+
+        return affected == 1
+            ? (CurrencyError.None, await FindAsync(userId, type, cancellationToken))
+            : (CurrencyError.Overflow, null);
+    }
+
+    public async Task<(CurrencyError error, Currency? currency)> RemoveAsync(
+        int userId,
+        CurrencyType type,
+        long amount,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(type))
+            return (CurrencyError.InvalidCurrency, null);
+        if (amount <= 0)
+            return (CurrencyError.InvalidAmount, null);
+
+        (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
+        if (error != CurrencyError.None || currency is null)
+            return (error, null);
+
+        int affected = await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE `Currencies` SET `Amount` = `Amount` - {amount} WHERE `UserId` = {userId} AND `Type` = {(int)type} AND `Amount` >= {amount}",
+            cancellationToken);
+
+        return affected == 1
+            ? (CurrencyError.None, await FindAsync(userId, type, cancellationToken))
+            : (CurrencyError.LackOfCurrency, null);
+    }
+
+    private Task<bool> UserExistsAsync(int userId, CancellationToken cancellationToken) =>
+        dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken);
+
+    private Task<Currency?> FindAsync(int userId, CurrencyType type, CancellationToken cancellationToken) =>
+        dbContext.Currencies.AsNoTracking().SingleOrDefaultAsync(
+            currency => currency.UserId == userId && currency.Type == type,
+            cancellationToken);
 }

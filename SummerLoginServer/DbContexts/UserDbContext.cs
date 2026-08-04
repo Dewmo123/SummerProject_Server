@@ -11,12 +11,11 @@ namespace SummerLoginServer.DbContexts
 
         }
         public DbSet<User> Users => Set<User>();
-        public DbSet<Character> Chars => Set<Character>();
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.Ignore<Character>();
         }
     }
 }

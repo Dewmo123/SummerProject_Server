@@ -17,22 +17,11 @@ namespace SummerGameServer.Controllers
             _characterService = characterService;
         }
         [HttpGet("me")]
-        public async Task<ActionResult<CharacterResponse>> Me()
+        public async Task<ActionResult<CharacterResponse>> Me(CancellationToken cancellationToken)
         {
             if (!User.TryGetUserId(out int userId))
                 return Unauthorized();
-            var character = await _characterService.GetByUserIdAsync(userId);
-            if (character is null)
-                return NotFound(new { message = "캐릭터를 찾을 수 없습니다." });
-            return Ok(character);
-        }
-        [HttpPost("me/gain-exp")]
-        public async Task<ActionResult<CharacterResponse>> GainExp(GainExpRequest request)
-        {
-            if (!User.TryGetUserId(out int userId))
-                return Unauthorized();
-            var character = await _characterService.AddExpAsync(userId, request.Amount);
-
+            var character = await _characterService.GetByUserIdAsync(userId, cancellationToken);
             if (character is null)
                 return NotFound(new { message = "캐릭터를 찾을 수 없습니다." });
             return Ok(character);

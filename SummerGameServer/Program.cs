@@ -2,15 +2,13 @@
 using Persistence.Extensions;
 using SummerGameServer.DbContexts;
 using SummerGameServer.Services;
-using System.ComponentModel.DataAnnotations;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
 {
-    options.AddDocumentTransformer((document, context, ct) =>
+    options.AddDocumentTransformer((document, _, _) =>
     {
         document.Info.Title = "SummerGameServer";
         document.Info.Version = "0.0.1";
@@ -24,22 +22,52 @@ builder.Services.AddScoped<CharacterService>();
 builder.Services.AddScoped<CurrencyService>();
 builder.Services.AddSingleton(CatalogManager.LoadFrom(builder.Environment.ContentRootPath));
 builder.Services.AddControllers();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks();
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst("sub")?.Value ??
+            context.Connection.RemoteIpAddress?.ToString() ??
+            "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromSeconds(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 builder.Services.AddAppJwtAuthentication(builder.Configuration);
-string mySqlConnection = builder.Configuration.GetConnectionString("MySql") ?? throw new Exception("MySql ConnectionString is null");
-builder.Services.AddDbContext<UserDbContext>(options => options.UseMySql(mySqlConnection, new MySqlServerVersion(new Version(8, 0, 41))));
+
+string mySqlConnection = builder.Configuration.GetConnectionString("MySql")
+    ?? throw new InvalidOperationException("MySql connection string is missing.");
+builder.Services.AddDbContext<UserDbContext>(options =>
+    options.UseMySql(mySqlConnection, new MySqlServerVersion(new Version(8, 0, 41))));
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "SummerGameServer");
-    });
+        options.SwaggerEndpoint("/openapi/v1.json", "SummerGameServer"));
 }
-app.MapControllers();
-app.MapGet("/", () => "SummerGamenServer is running");
+app.UseExceptionHandler();
+app.UseHsts();
+
 app.UseHttpsRedirection();
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+app.MapHealthChecks("/health");
+app.MapGet("/", () => "SummerGameServer is running");
 
 app.Run();
+
+public partial class Program;

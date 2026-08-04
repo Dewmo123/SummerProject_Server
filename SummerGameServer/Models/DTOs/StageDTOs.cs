@@ -1,10 +1,7 @@
 ﻿using SummerGameServer.Models.VOs;
-using SummerGameServer.Services;
 
 namespace SummerGameServer.Models.DTOs
 {
-    //나중가면 추가될수 있는 필드들
-    //Reward
     public sealed record GetStageResponse(int Width, int Height, bool[] TileDatas, TrapVO[] TrapDatas);
     public sealed record StageEnterResponse()
     {
@@ -20,9 +17,6 @@ namespace SummerGameServer.Models.DTOs
             };
         }
 
-    }
-    public sealed record StageResultRequest()
-    {
     }
     public sealed record StageResultResponse()
     {

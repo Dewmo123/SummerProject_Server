@@ -28,7 +28,7 @@ namespace SummerLoginServer.Services
                     new GoogleJsonWebSignature.ValidationSettings
                     {
                         Audience = _clientIds
-                    });
+                    }).WaitAsync(cancellationToken);
 
                 if (string.IsNullOrWhiteSpace(payload.Subject))
                     return null;
