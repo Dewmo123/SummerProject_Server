@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Entities;
 using SummerGameServer.Extensions;
-using SummerGameServer.Models;
+using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.DTOs;
 using SummerGameServer.Services;
 
 namespace SummerGameServer.Controllers

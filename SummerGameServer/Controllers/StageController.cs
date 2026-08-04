@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SummerGameServer.Extensions;
-using SummerGameServer.Models;
+using SummerGameServer.Models.DTOs;
+using SummerGameServer.Models.VOs;
 using SummerGameServer.Services;
 
 namespace SummerGameServer.Controllers
@@ -17,7 +18,7 @@ namespace SummerGameServer.Controllers
         [HttpGet("{stageId:int}")]
         public GetStageResponse GetStaticStage(int stageId)
         {
-            StageData stageData = _stageService.GetStage(stageId)!;
+            StageVO stageData = _stageService.GetStage(stageId)!;
 
             return new GetStageResponse(stageData.Width,stageData.Height,stageData.TileDatas,stageData.Trapdatas);
         }

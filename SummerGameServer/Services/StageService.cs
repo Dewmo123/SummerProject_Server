@@ -3,8 +3,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Persistence.Entities;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Entities;
-using SummerGameServer.Models;
+using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.DTOs;
+using SummerGameServer.Models.VOs;
 
 namespace SummerGameServer.Services
 {
@@ -32,14 +33,14 @@ namespace SummerGameServer.Services
         }
 
         //테스트용 스테이지 그냥 생으로 가져오기
-        public StageData? GetStage(int stageId)
+        public StageVO? GetStage(int stageId)
         {
-            return _catalog.GetCatalogModel<StageData>(stageId);
+            return _catalog.GetCatalogModel<StageVO>(stageId);
         }
         //실제 스테이지 입장 종료 처리 다 하는 거시기 플레이하는거
         public async Task<StageEnterResponse?> EnterAsync(int userId, int stageId)
         {
-            StageData? stageData = _catalog.GetCatalogModel<StageData>(stageId);
+            StageVO? stageData = _catalog.GetCatalogModel<StageVO>(stageId);
             if (stageData is null)
                 return null;
             StageRun run = new StageRun() { UserId = userId, StageId = stageId };
@@ -58,7 +59,7 @@ namespace SummerGameServer.Services
             else if(run.Status != StageRunStatus.InProgress)
                 return (StageError.AlreadyCompleted, null);
 
-            StageData? stage = _catalog.GetCatalogModel<StageData>(run.StageId);
+            StageVO? stage = _catalog.GetCatalogModel<StageVO>(run.StageId);
             if (stage is null)
                 return (StageError.StageNotFound, null);
             //여기서 유저가 남은 체력을 기반으로 보상 계산

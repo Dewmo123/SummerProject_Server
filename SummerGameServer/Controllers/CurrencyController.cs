@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SummerGameServer.Entities;
 using SummerGameServer.Extensions;
-using SummerGameServer.Models;
+using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.DTOs;
 using SummerGameServer.Services;
 
 namespace SummerGameServer.Controllers

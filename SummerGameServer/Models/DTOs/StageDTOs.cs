@@ -1,26 +1,16 @@
-﻿using Persistence.Entities;
-using SummerGameServer.Entities;
+﻿using SummerGameServer.Models.VOs;
 using SummerGameServer.Services;
 
-namespace SummerGameServer.Models
+namespace SummerGameServer.Models.DTOs
 {
     //나중가면 추가될수 있는 필드들
     //Reward
-    public sealed record StageData : ICatalogModel
-    {
-        public int Id => StageId;
-        public int StageId { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public bool[] TileDatas { get; set; } = null!;
-        public TrapData[] Trapdatas { get; set; } = null!;
-    }
-    public sealed record GetStageResponse(int Width, int Height, bool[] TileDatas, TrapData[] TrapDatas);
+    public sealed record GetStageResponse(int Width, int Height, bool[] TileDatas, TrapVO[] TrapDatas);
     public sealed record StageEnterResponse()
     {
         public int RunId { get; set; }
-        public StageData StageData { get; set; } = null!;
-        public static StageEnterResponse From(int runId, StageData stage, CatalogManager catalog)
+        public StageVO StageData { get; set; } = null!;
+        public static StageEnterResponse From(int runId, StageVO stage, CatalogManager catalog)
         {
             //나중에 TrapCatalog 추가하면 그때 무결성 검사
             return new StageEnterResponse()

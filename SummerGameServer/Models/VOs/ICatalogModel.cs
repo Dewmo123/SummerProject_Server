@@ -1,4 +1,4 @@
-﻿namespace SummerGameServer.Models
+﻿namespace SummerGameServer.Models.VOs
 {
     public interface ICatalogModel
     {

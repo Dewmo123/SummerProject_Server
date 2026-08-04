@@ -1,8 +1,7 @@
 ﻿using Persistence.Entities;
-using SummerGameServer.Entities;
 using System.ComponentModel.DataAnnotations;
 
-namespace SummerGameServer.Models
+namespace SummerGameServer.Models.DTOs
 {
     public record CharacterResponse
     {

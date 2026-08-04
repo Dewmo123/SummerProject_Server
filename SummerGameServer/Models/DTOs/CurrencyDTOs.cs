@@ -1,6 +1,6 @@
-﻿using SummerGameServer.Entities;
+﻿using SummerGameServer.Models.DAOs;
 
-namespace SummerGameServer.Models
+namespace SummerGameServer.Models.DTOs
 {
     public record CurrenciesResponse
     {

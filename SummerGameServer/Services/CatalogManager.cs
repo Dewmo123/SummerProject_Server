@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SummerGameServer.Models;
+using SummerGameServer.Models.VOs;
 
 namespace SummerGameServer.Services
 {
@@ -28,8 +29,8 @@ namespace SummerGameServer.Services
         {
             string dir = Path.Combine(contentRoot, "GameData");
             Dictionary<Type, ICatalog> catalogs = new();
-            catalogs.Add(typeof(MapData), MakeCatalog<MapData>(Path.Combine(dir, "Maps"), "Map"));
-            catalogs.Add(typeof(StageData),MakeCatalog<StageData>(Path.Combine(dir, "Stages"), "Stage"));
+            catalogs.Add(typeof(MapVO), MakeCatalog<MapVO>(Path.Combine(dir, "Maps"), "Map"));
+            catalogs.Add(typeof(StageVO),MakeCatalog<StageVO>(Path.Combine(dir, "Stages"), "Stage"));
             //나중에 Trap들도 추가
 
             return new CatalogManager(catalogs);

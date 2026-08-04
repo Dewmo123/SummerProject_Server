@@ -1,12 +1,10 @@
-﻿
-namespace SummerGameServer.Models
+﻿namespace SummerGameServer.Models.VOs
 {
-    public sealed record MapData(int MapId, int Width, int Height, bool[] TileDatas) : ICatalogModel
+    public sealed record MapVO(int MapId, int Width, int Height, bool[] TileDatas) : ICatalogModel
     {
         public int Id => MapId;
     }
 
-    public sealed record TrapData(TrapType Type, Vector3Int Position, Quaternion Rotation);
     public enum TrapType
     {
         SawTrap,

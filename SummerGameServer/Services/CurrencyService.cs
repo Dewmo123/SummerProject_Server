@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Entities;
-using SummerGameServer.Models;
+using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.DTOs;
 
 namespace SummerGameServer.Services
 {
@@ -73,7 +73,7 @@ namespace SummerGameServer.Services
                 return (CurrencyError.InvalidCurrency, null);
             var item = await GetOrCreateAsync(userId, type);
             if (item.error != CurrencyError.None || item.currency == null)
-                return (CurrencyError.None, null);
+                return item;
             item.currency.Amount += Math.Abs(amount);
             await _dbContext.SaveChangesAsync();
             return item;
@@ -84,7 +84,7 @@ namespace SummerGameServer.Services
                 return (CurrencyError.InvalidCurrency, null);
             var item = await GetOrCreateAsync(userId, type);
             if (item.error != CurrencyError.None || item.currency == null)
-                return (CurrencyError.None, null);
+                return item;
             long remain = item.currency.Amount - Math.Abs(amount);
             if (remain < 0)
                 return (CurrencyError.LackOfCurrency, null);

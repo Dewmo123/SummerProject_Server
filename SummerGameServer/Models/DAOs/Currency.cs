@@ -1,6 +1,6 @@
 ﻿using Persistence.Entities;
 
-namespace SummerGameServer.Entities
+namespace SummerGameServer.Models.DAOs
 {
     public enum CurrencyType
     {
@@ -16,6 +16,5 @@ namespace SummerGameServer.Entities
         public User User { get; set; } = null!;
         public CurrencyType Type { get; set; }
         public long Amount { get; set; } = 0;
-
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Persistence.Entities;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Models;
+using SummerGameServer.Models.DTOs;
 
 namespace SummerGameServer.Services
 {
