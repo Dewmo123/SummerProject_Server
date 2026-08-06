@@ -20,6 +20,7 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddScoped<StageService>();
 builder.Services.AddScoped<CharacterService>();
 builder.Services.AddScoped<CurrencyService>();
+builder.Services.AddScoped<UserRoomService>();
 builder.Services.AddSingleton(CatalogManager.LoadFrom(builder.Environment.ContentRootPath));
 builder.Services.AddControllers();
 

@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.Entities;
 using SummerGameServer.Models.DTOs;
 
 namespace SummerGameServer.Services;

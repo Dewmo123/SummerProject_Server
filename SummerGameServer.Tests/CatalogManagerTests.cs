@@ -1,4 +1,4 @@
-using SummerGameServer.Models.VOs;
+﻿using SummerGameServer.Models.Datas;
 using SummerGameServer.Services;
 
 namespace SummerGameServer.Tests;
@@ -10,8 +10,8 @@ public sealed class CatalogManagerTests
     {
         CatalogManager catalog = CatalogManager.LoadFrom(AppContext.BaseDirectory);
 
-        StageVO stage = Assert.IsType<StageVO>(catalog.GetCatalogModel<StageVO>(1));
-        MapVO map = Assert.IsType<MapVO>(catalog.GetCatalogModel<MapVO>(1));
+        StageData stage = Assert.IsType<StageData>(catalog.GetCatalogModel<StageData>(1));
+        MapData map = Assert.IsType<MapData>(catalog.GetCatalogModel<MapData>(1));
 
         Assert.Equal(stage.Width * stage.Height, stage.TileDatas.Length);
         Assert.Equal(map.Width * map.Height, map.TileDatas.Length);

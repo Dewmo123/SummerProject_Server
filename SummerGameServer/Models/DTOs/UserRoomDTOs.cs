@@ -1,4 +1,4 @@
-﻿using SummerGameServer.Models.VOs;
+﻿using SummerGameServer.Models.Datas;
 
 namespace SummerGameServer.Models.DTOs
 {
@@ -9,7 +9,13 @@ namespace SummerGameServer.Models.DTOs
 
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.MaxLength(100)]
-        public TrapVO[] TrapDatas { get; set; } = [];
+        public TrapData[] TrapDatas { get; set; } = [];
+    }
+    public sealed record UserRoomResponse
+    {
+        public int UserId { get; set; }
+        public MapData MapData { get; set; } = null!;
+        public TrapData[] TrapDatas { get; set; } = [];
     }
 
 }

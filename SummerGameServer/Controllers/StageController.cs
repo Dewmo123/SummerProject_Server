@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SummerGameServer.Extensions;
 using SummerGameServer.Models.DTOs;
-using SummerGameServer.Models.VOs;
+using SummerGameServer.Models.Datas;
 using SummerGameServer.Services;
 
 namespace SummerGameServer.Controllers;
@@ -16,7 +16,7 @@ public sealed class StageController(StageService stageService) : ControllerBase
     [AllowAnonymous]
     public ActionResult<GetStageResponse> GetStaticStage(int stageId)
     {
-        StageVO? stageData = stageService.GetStage(stageId);
+        StageData? stageData = stageService.GetStage(stageId);
         return stageData is null
             ? NotFound(new { message = "존재하지 않는 스테이지입니다." })
             : Ok(new GetStageResponse(

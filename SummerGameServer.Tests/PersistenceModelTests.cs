@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Persistence.Entities;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.Entities;
 
 namespace SummerGameServer.Tests;
 

@@ -1,4 +1,4 @@
-﻿using SummerGameServer.Models.VOs;
+﻿using SummerGameServer.Models.Datas;
 
 namespace SummerGameServer.Services
 {

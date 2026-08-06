@@ -1,4 +1,4 @@
-﻿using SummerGameServer.Models.DAOs;
+﻿using SummerGameServer.Models.Entities;
 
 namespace SummerGameServer.Models.DTOs
 {

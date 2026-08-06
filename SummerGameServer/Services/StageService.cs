@@ -2,9 +2,9 @@
 using Newtonsoft.Json;
 using Persistence.Entities;
 using SummerGameServer.DbContexts;
-using SummerGameServer.Models.DAOs;
+using SummerGameServer.Models.Entities;
 using SummerGameServer.Models.DTOs;
-using SummerGameServer.Models.VOs;
+using SummerGameServer.Models.Datas;
 using System.Data;
 
 namespace SummerGameServer.Services;
@@ -23,11 +23,11 @@ public enum StageError
 
 public sealed class StageService(UserDbContext dbContext, CatalogManager catalog, CharacterService characterService, CurrencyService currencyService)
 {
-    public StageVO? GetStage(int stageId) => catalog.GetCatalogModel<StageVO>(stageId);
+    public StageData? GetStage(int stageId) => catalog.GetCatalogModel<StageData>(stageId);
 
     public async Task<(StageError error, StageEnterResponse? response)> EnterAsync(int userId, int stageId, CancellationToken cancellationToken = default)
     {
-        StageVO? stageData = catalog.GetCatalogModel<StageVO>(stageId);
+        StageData? stageData = catalog.GetCatalogModel<StageData>(stageId);
         if (stageData is null)
             return (StageError.StageNotFound, null);
 
@@ -55,7 +55,7 @@ public sealed class StageService(UserDbContext dbContext, CatalogManager catalog
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return (StageError.None, StageEnterResponse.From(run.Id, stageData));
+        return (StageError.None, StageEnterResponse.From(run.Id, stageData,catalog));
     }
 
     public async Task<(StageError error, StageResultResponse? result)> CompleteAsync(int userId, int runId, CancellationToken cancellationToken = default)
@@ -74,7 +74,7 @@ public sealed class StageService(UserDbContext dbContext, CatalogManager catalog
         if (run.Status != StageRunStatus.InProgress)
             return (StageError.AlreadyCompleted, null);
 
-        StageVO? stage = catalog.GetCatalogModel<StageVO>(run.StageId);
+        StageData? stage = catalog.GetCatalogModel<StageData>(run.StageId);
         if (stage is null)
             return (StageError.StageNotFound, null);
 

@@ -1,13 +1,14 @@
-﻿using SummerGameServer.Models.VOs;
+﻿using SummerGameServer.Models.Datas;
+using SummerGameServer.Services;
 
 namespace SummerGameServer.Models.DTOs
 {
-    public sealed record GetStageResponse(int Width, int Height, bool[] TileDatas, TrapVO[] TrapDatas);
+    public sealed record GetStageResponse(int Width, int Height, bool[] TileDatas, TrapData[] TrapDatas);
     public sealed record StageEnterResponse()
     {
         public int RunId { get; set; }
-        public StageVO StageData { get; set; } = null!;
-        public static StageEnterResponse From(int runId, StageVO stage, CatalogManager catalog)
+        public StageData StageData { get; set; } = null!;
+        public static StageEnterResponse From(int runId, StageData stage, CatalogManager catalog)
         {
             //나중에 TrapCatalog 추가하면 그때 무결성 검사
             return new StageEnterResponse()

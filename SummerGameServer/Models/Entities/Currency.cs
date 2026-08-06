@@ -1,6 +1,6 @@
 ﻿using Persistence.Entities;
 
-namespace SummerGameServer.Models.DAOs
+namespace SummerGameServer.Models.Entities
 {
     public enum CurrencyType
     {

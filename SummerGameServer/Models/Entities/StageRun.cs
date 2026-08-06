@@ -1,4 +1,4 @@
-﻿namespace SummerGameServer.Models.DAOs
+﻿namespace SummerGameServer.Models.Entities
 {
     public enum StageRunStatus
     {
