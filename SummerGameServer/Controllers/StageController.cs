@@ -14,16 +14,12 @@ public sealed class StageController(StageService stageService) : ControllerBase
 {
     [HttpGet("{stageId:int}")]
     [AllowAnonymous]
-    public ActionResult<GetStageResponse> GetStaticStage(int stageId)
+    public ActionResult<StageData> GetStaticStage(int stageId)
     {
         StageData? stageData = stageService.GetStage(stageId);
         return stageData is null
             ? NotFound(new { message = "존재하지 않는 스테이지입니다." })
-            : Ok(new GetStageResponse(
-                stageData.Width,
-                stageData.Height,
-                stageData.TileDatas,
-                stageData.TrapDatas));
+            : Ok(stageData);
     }
 
     [HttpPost("{stageId:int}/enter")]
