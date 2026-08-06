@@ -1,6 +1,30 @@
-@SummerLoginServer_HostAddress = http://localhost:5147
+@SummerLoginServer_HostAddress = https://localhost:7208
+@GoogleIdToken = replace-with-google-id-token
+@RefreshToken = replace-with-refresh-token
 
-GET {{SummerLoginServer_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{SummerLoginServer_HostAddress}}/api/account/login/google
+Content-Type: application/json
+
+{
+  "idToken": "{{GoogleIdToken}}"
+}
+
+###
+
+POST {{SummerLoginServer_HostAddress}}/api/account/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{RefreshToken}}"
+}
+
+###
+
+POST {{SummerLoginServer_HostAddress}}/api/account/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{RefreshToken}}"
+}
 
 ###

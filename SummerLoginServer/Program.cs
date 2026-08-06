@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Persistence.Extensions;
 using SummerLoginServer.DbContexts;
+using SummerLoginServer.Models;
 using SummerLoginServer.Services;
 using System.Threading.RateLimiting;
 
@@ -56,8 +57,13 @@ public class Program
             options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 41))));
 
         builder.Services.AddAppJwtAuthentication(builder.Configuration);
+        builder.Services.AddOptions<RefreshTokenOptions>()
+            .Bind(builder.Configuration.GetSection(RefreshTokenOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         builder.Services.AddSingleton<JwtTokenService>();
         builder.Services.AddScoped<GoogleService>();
+        builder.Services.AddScoped<RefreshTokenService>();
 
         WebApplication app = builder.Build();
 
