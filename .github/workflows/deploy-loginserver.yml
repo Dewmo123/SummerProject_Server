@@ -1,0 +1,95 @@
+name: Deploy Game Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "SummerLoginServer/**"
+      - ".github/workflows/deploy-loginserver.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-loginserver
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: |
+          dotnet restore SummerLoginServer/SummerLoginServer.csproj
+
+      - name: Test
+        run: |
+          dotnet test --no-restore --configuration Release
+
+      - name: Publish
+        run: |
+          dotnet publish SummerLoginServer/SummerLoginServer.csproj \
+            --configuration Release \
+            --output ./publish \
+            --no-restore
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan -p "$SERVER_PORT" "$SERVER_HOST" \
+            >> ~/.ssh/known_hosts
+
+      - name: Prepare remote directory
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          ssh -vvv \
+            -o IdentitiesOnly=yes \
+            -i ~/.ssh/deploy_key \
+            -p "$SERVER_PORT" \
+            "$SERVER_USER@$SERVER_HOST" \
+            "echo connected"
+      - name: Upload published files
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          scp \
+            -i ~/.ssh/deploy_key \
+            -P "$SERVER_PORT" \
+            -r ./publish/. \
+            "$SERVER_USER@$SERVER_HOST:/tmp/gameapi-release/"
+
+      - name: Restart game server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p "$SERVER_PORT" \
+            "$SERVER_USER@$SERVER_HOST" \
+            "/usr/local/bin/deploy-gameapi.sh"
