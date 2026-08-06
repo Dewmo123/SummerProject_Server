@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Entities;
@@ -19,9 +19,7 @@ public sealed class AccountController(
 {
     [HttpPost("login/google")]
     [EnableRateLimiting("login")]
-    public async Task<IActionResult> GoogleLogin(
-        GoogleLoginRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> GoogleLogin(GoogleLoginRequest request,CancellationToken cancellationToken)
     {
         GoogleUserInfo? googleUser = await googleService.VerifyIdTokenAsync(
             request.IdToken,
