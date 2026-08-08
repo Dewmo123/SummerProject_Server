@@ -24,7 +24,7 @@ namespace Persistence.Extensions
         public string SigningKey { get; init; } = string.Empty;
 
         [Range(1, 1440)]
-        public int AccessTokenMinutes { get; init; } = 15;
+        public int AccessTokenMinutes { get; init; } = 60;
     }
     public static class AuthenticationExtensions
     {
