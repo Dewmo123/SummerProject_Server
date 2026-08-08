@@ -42,7 +42,7 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
         RefreshToken? current = await dbContext.RefreshTokens
             .AsNoTracking()
             .SingleOrDefaultAsync(
-                token => token.TokenHash.SequenceEqual(tokenHash),
+                token => token.TokenHash == tokenHash,
                 cancellationToken);
 
         if (current is null)
