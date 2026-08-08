@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SummerLoginServer.Models;
 
@@ -11,7 +11,7 @@ public sealed class RefreshTokenOptions
 }
 
 public sealed record RefreshTokenRequest(
-    [property: Required] string RefreshToken);
+    [Required] string RefreshToken);
 
 public sealed record TokenRefreshResponse(
     string AccessToken,
