@@ -34,7 +34,10 @@ jobs:
 
       - name: Test
         run: |
-          dotnet test --no-restore --configuration Release
+          dotnet test \
+            SummerGameServer/SummerGameServer.csproj \
+            --no-restore \
+            --configuration Release
 
       - name: Publish
         run: |
@@ -58,18 +61,21 @@ jobs:
           ssh-keyscan -p "$SERVER_PORT" "$SERVER_HOST" \
             >> ~/.ssh/known_hosts
 
+          chmod 600 ~/.ssh/known_hosts
+
       - name: Prepare remote directory
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          ssh -vvv \
+          ssh \
             -o IdentitiesOnly=yes \
             -i ~/.ssh/deploy_key \
             -p "$SERVER_PORT" \
             "$SERVER_USER@$SERVER_HOST" \
-            "echo connected"
+            "rm -rf /tmp/gameserver-release && mkdir -p /tmp/gameserver-release"
+
       - name: Upload published files
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
@@ -77,6 +83,7 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
           scp \
+            -o IdentitiesOnly=yes \
             -i ~/.ssh/deploy_key \
             -P "$SERVER_PORT" \
             -r ./publish/. \
@@ -89,6 +96,7 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
           ssh \
+            -o IdentitiesOnly=yes \
             -i ~/.ssh/deploy_key \
             -p "$SERVER_PORT" \
             "$SERVER_USER@$SERVER_HOST" \
