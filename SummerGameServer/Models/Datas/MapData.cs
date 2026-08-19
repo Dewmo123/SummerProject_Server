@@ -9,13 +9,13 @@
     {
         SawTrap,
     }
-    public struct Vector3Int
+    public struct Vector3IntProto
     {
         public int x { get; set; }
         public int y { get; set; }
         public int z { get; set; }
     }
-    public struct Quaternion
+    public struct QuaternionProto
     {
         public float x { get; set; }
         public float y { get; set; }

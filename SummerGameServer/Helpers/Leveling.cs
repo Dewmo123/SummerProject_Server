@@ -1,4 +1,4 @@
-﻿namespace SummerGameServer.Services
+﻿namespace SummerGameServer.Helpers
 {
     public static class Leveling
     {
