@@ -27,7 +27,7 @@ public sealed class UserRoomService(UserDbContext dbContext, CatalogManager cata
         UploadUserRoomRequest request,
         CancellationToken cancellationToken = default)
     {
-        MapData? map = catalog.GetCatalogModel<MapData>(request.MapId);
+        MapProto? map = catalog.GetCatalogModel<MapProto>(request.MapId);
         if (map is null)
             return (UserRoomError.MapNotFound, null);
 
@@ -55,17 +55,17 @@ public sealed class UserRoomService(UserDbContext dbContext, CatalogManager cata
         int userId,
         CancellationToken cancellationToken = default)
     {
-        UserRoom? room = await dbContext.UserRooms
+        UserRoomModel? room = await dbContext.UserRooms
             .AsNoTracking()
             .SingleOrDefaultAsync(room => room.UserId == userId, cancellationToken);
         if (room is null)
             return (UserRoomError.RoomNotFound, null);
 
-        MapData? map = catalog.GetCatalogModel<MapData>(room.MapId);
+        MapProto? map = catalog.GetCatalogModel<MapProto>(room.MapId);
         if (map is null)
             return (UserRoomError.InvalidRoomMap, null);
 
-        TrapData[] trapDatas = JsonConvert.DeserializeObject<TrapData[]>(room.TrapData) ?? [];
+        TrapProto[] trapDatas = JsonConvert.DeserializeObject<TrapProto[]>(room.TrapData) ?? [];
         return (UserRoomError.None, new UserRoomResponse
         {
             MapData = map,
@@ -74,10 +74,10 @@ public sealed class UserRoomService(UserDbContext dbContext, CatalogManager cata
         });
     }
 
-    private static UserRoomError ValidateTraps(IReadOnlyCollection<TrapData> traps, MapData map)
+    private static UserRoomError ValidateTraps(IReadOnlyCollection<TrapProto> traps, MapProto map)
     {
         HashSet<(int x, int y, int z)> occupied = [];
-        foreach (TrapData trap in traps)
+        foreach (TrapProto trap in traps)
         {
             if (!Enum.IsDefined(trap.Type))
                 return UserRoomError.UnsupportedTrapType;

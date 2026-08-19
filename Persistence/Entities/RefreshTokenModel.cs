@@ -1,12 +1,12 @@
 ﻿namespace Persistence.Entities;
 
-public sealed class RefreshToken
+public sealed class RefreshTokenModel
 {
     public Guid Id { get; set; }
 
     public int UserId { get; set; }
 
-    public User User { get; set; } = null!;
+    public UserModel User { get; set; } = null!;
 
     public Guid FamilyId { get; set; }
 

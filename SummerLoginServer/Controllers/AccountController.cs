@@ -22,20 +22,20 @@ public sealed class AccountController(
     [EnableRateLimiting("login")]
     public async Task<IActionResult> GoogleLogin(GoogleLoginRequest request, CancellationToken cancellationToken)
     {
-        GoogleUserInfo? googleUser = await googleService.VerifyIdTokenAsync(
+        GoogleUserInfoProto? googleUser = await googleService.VerifyIdTokenAsync(
             request.IdToken,
             cancellationToken);
         if (googleUser is null)
             return Unauthorized(new { message = "Invalid Google ID Token" });
 
-        User? user = await dbContext.Users.SingleOrDefaultAsync(
+        UserModel? user = await dbContext.Users.SingleOrDefaultAsync(
             candidate => candidate.Provider == LoginProvider.Google &&
                          candidate.ProviderUserId == googleUser.Subject,
             cancellationToken);
 
         if (user is null)
         {
-            user = new User
+            user = new UserModel
             {
                 Username = CreateInitialUsername(googleUser.Subject),
                 Provider = LoginProvider.Google,
@@ -61,8 +61,8 @@ public sealed class AccountController(
             }
         }
 
-        IssuedToken token = jwtTokenService.CreateAccessToken(user);
-        IssuedRefreshToken refreshToken = await refreshTokenService.CreateSessionAsync(user.Id, cancellationToken);
+        IssuedTokenProto token = jwtTokenService.CreateAccessToken(user);
+        IssuedRefreshTokenProto refreshToken = await refreshTokenService.CreateSessionAsync(user.Id, cancellationToken);
 
         return Ok(new GoogleLoginResponse(
             user.Id,
@@ -78,14 +78,14 @@ public sealed class AccountController(
     [EnableRateLimiting("login")]
     public async Task<IActionResult> TestLogin(CancellationToken cancellationToken)
     {
-        User? user = await dbContext.Users.SingleOrDefaultAsync(
+        UserModel? user = await dbContext.Users.SingleOrDefaultAsync(
             candidate => candidate.Username == "Developer",
             cancellationToken);
         if (user is null)
             return NotFound("개발자는 없습니다.");
 
-        IssuedToken token = jwtTokenService.CreateAccessToken(user);
-        IssuedRefreshToken refreshToken = await refreshTokenService.CreateSessionAsync(
+        IssuedTokenProto token = jwtTokenService.CreateAccessToken(user);
+        IssuedRefreshTokenProto refreshToken = await refreshTokenService.CreateSessionAsync(
             user.Id,
             cancellationToken);
 
@@ -102,7 +102,7 @@ public sealed class AccountController(
     [EnableRateLimiting("login")]
     public async Task<IActionResult> Refresh(RefreshTokenRequest request, CancellationToken cancellationToken)
     {
-        RefreshTokenRotationResult result = await refreshTokenService.RotateAsync(
+        RefreshTokenRotationResultProto result = await refreshTokenService.RotateAsync(
             request.RefreshToken,
             cancellationToken);
 
@@ -119,13 +119,13 @@ public sealed class AccountController(
             });
         }
 
-        User? user = await dbContext.Users.FindAsync(
+        UserModel? user = await dbContext.Users.FindAsync(
             [result.UserId.Value],
             cancellationToken);
         if (user is null)
             return Unauthorized();
 
-        IssuedToken accessToken = jwtTokenService.CreateAccessToken(user);
+        IssuedTokenProto accessToken = jwtTokenService.CreateAccessToken(user);
         return Ok(new TokenRefreshResponse(
             accessToken.Value,
             accessToken.ExpiresAt,

@@ -18,7 +18,7 @@ namespace SummerLoginServer.Services
             if (_clientIds.Count == 0)
                 throw new InvalidOperationException("ClientIds 누락됨");
         }
-        public async Task<GoogleUserInfo?> VerifyIdTokenAsync(string idToken, CancellationToken cancellationToken = default)
+        public async Task<GoogleUserInfoProto?> VerifyIdTokenAsync(string idToken, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -32,7 +32,7 @@ namespace SummerLoginServer.Services
 
                 if (string.IsNullOrWhiteSpace(payload.Subject))
                     return null;
-                return new GoogleUserInfo(
+                return new GoogleUserInfoProto(
                     payload.Subject,
                     payload.Email,
                     payload.Name,

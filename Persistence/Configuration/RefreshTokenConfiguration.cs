@@ -4,9 +4,9 @@ using Persistence.Entities;
 
 namespace Persistence.Configuration;
 
-public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshTokenModel>
 {
-    public void Configure(EntityTypeBuilder<RefreshToken> builder)
+    public void Configure(EntityTypeBuilder<RefreshTokenModel> builder)
     {
         builder.HasKey(token => token.Id);
 

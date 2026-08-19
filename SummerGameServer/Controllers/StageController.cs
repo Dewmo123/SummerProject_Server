@@ -14,9 +14,9 @@ public sealed class StageController(StageService stageService) : ControllerBase
 {
     [HttpGet("{stageId:int}")]
     [AllowAnonymous]
-    public ActionResult<StageData> GetStaticStage(int stageId)
+    public ActionResult<StageProto> GetStaticStage(int stageId)
     {
-        StageData? stageData = stageService.GetStage(stageId);
+        StageProto? stageData = stageService.GetStage(stageId);
         return stageData is null
             ? NotFound(new { message = "존재하지 않는 스테이지입니다." })
             : Ok(stageData);

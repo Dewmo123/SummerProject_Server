@@ -44,13 +44,13 @@ public sealed class CurrencyService(UserDbContext dbContext)
         CurrencyType type,
         CancellationToken cancellationToken = default)
     {
-        (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
+        (CurrencyError error, CurrencyModel? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
         return error != CurrencyError.None || currency is null
             ? (error, null)
             : (CurrencyError.None, new CurrencyResponse { Amount = currency.Amount, Type = type });
     }
 
-    public async Task<(CurrencyError error, Currency? currency)> GetOrCreateAsync(
+    public async Task<(CurrencyError error, CurrencyModel? currency)> GetOrCreateAsync(
         int userId,
         CurrencyType type,
         CancellationToken cancellationToken = default)
@@ -64,13 +64,13 @@ public sealed class CurrencyService(UserDbContext dbContext)
             $"INSERT IGNORE INTO `Currencies` (`UserId`, `Type`, `Amount`) VALUES ({userId}, {(int)type}, 0)",
             cancellationToken);
 
-        Currency? currency = await FindAsync(userId, type, cancellationToken);
+        CurrencyModel? currency = await FindAsync(userId, type, cancellationToken);
         return currency is null
             ? (CurrencyError.UserNotFound, null)
             : (CurrencyError.None, currency);
     }
 
-    public async Task<(CurrencyError error, Currency? currency)> AddAsync(
+    public async Task<(CurrencyError error, CurrencyModel? currency)> AddAsync(
         int userId,
         CurrencyType type,
         long amount,
@@ -81,7 +81,7 @@ public sealed class CurrencyService(UserDbContext dbContext)
         if (amount <= 0)
             return (CurrencyError.InvalidAmount, null);
 
-        (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
+        (CurrencyError error, CurrencyModel? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
         if (error != CurrencyError.None || currency is null)
             return (error, null);
 
@@ -94,7 +94,7 @@ public sealed class CurrencyService(UserDbContext dbContext)
             : (CurrencyError.Overflow, null);
     }
 
-    public async Task<(CurrencyError error, Currency? currency)> RemoveAsync(
+    public async Task<(CurrencyError error, CurrencyModel? currency)> RemoveAsync(
         int userId,
         CurrencyType type,
         long amount,
@@ -105,7 +105,7 @@ public sealed class CurrencyService(UserDbContext dbContext)
         if (amount <= 0)
             return (CurrencyError.InvalidAmount, null);
 
-        (CurrencyError error, Currency? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
+        (CurrencyError error, CurrencyModel? currency) = await GetOrCreateAsync(userId, type, cancellationToken);
         if (error != CurrencyError.None || currency is null)
             return (error, null);
 
@@ -121,7 +121,7 @@ public sealed class CurrencyService(UserDbContext dbContext)
     private Task<bool> UserExistsAsync(int userId, CancellationToken cancellationToken) =>
         dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken);
 
-    private Task<Currency?> FindAsync(int userId, CurrencyType type, CancellationToken cancellationToken) =>
+    private Task<CurrencyModel?> FindAsync(int userId, CurrencyType type, CancellationToken cancellationToken) =>
         dbContext.Currencies.AsNoTracking().SingleOrDefaultAsync(
             currency => currency.UserId == userId && currency.Type == type,
             cancellationToken);

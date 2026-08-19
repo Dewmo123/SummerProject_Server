@@ -23,11 +23,11 @@ public enum StageError
 
 public sealed class StageService(UserDbContext dbContext, CatalogManager catalog, CharacterService characterService, CurrencyService currencyService)
 {
-    public StageData? GetStage(int stageId) => catalog.GetCatalogModel<StageData>(stageId);
+    public StageProto? GetStage(int stageId) => catalog.GetCatalogModel<StageProto>(stageId);
 
     public async Task<(StageError error, StageEnterResponse? response)> EnterAsync(int userId, int stageId, CancellationToken cancellationToken = default)
     {
-        StageData? stageData = catalog.GetCatalogModel<StageData>(stageId);
+        StageProto? stageData = catalog.GetCatalogModel<StageProto>(stageId);
         if (stageData is null)
             return (StageError.StageNotFound, null);
 
@@ -35,7 +35,7 @@ public sealed class StageService(UserDbContext dbContext, CatalogManager catalog
             IsolationLevel.ReadCommitted,
             cancellationToken);
 
-        User? user = await dbContext.Users
+        UserModel? user = await dbContext.Users
             .FromSqlInterpolated($"SELECT * FROM `Users` WHERE `Id` = {userId} FOR UPDATE")
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
@@ -50,7 +50,7 @@ public sealed class StageService(UserDbContext dbContext, CatalogManager catalog
                     .SetProperty(run => run.CompletedAt, DateTime.UtcNow),
                 cancellationToken);
 
-        StageRun run = new() { UserId = userId, StageId = stageId };
+        StageRunModel run = new() { UserId = userId, StageId = stageId };
         dbContext.StageRuns.Add(run);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -64,7 +64,7 @@ public sealed class StageService(UserDbContext dbContext, CatalogManager catalog
             IsolationLevel.ReadCommitted,
             cancellationToken);//여러 테이블을 동시성 지켜서 업데이트 하므로 트랜잭션 사용
 
-        StageRun? run = await dbContext.StageRuns
+        StageRunModel? run = await dbContext.StageRuns
             .AsNoTracking() //엔티티의 상태를 기억하지 않으므로 효율적
             .SingleOrDefaultAsync(candidate => candidate.Id == runId, cancellationToken);
         if (run is null)
@@ -74,7 +74,7 @@ public sealed class StageService(UserDbContext dbContext, CatalogManager catalog
         if (run.Status != StageRunStatus.InProgress)
             return (StageError.AlreadyCompleted, null);
 
-        StageData? stage = catalog.GetCatalogModel<StageData>(run.StageId);
+        StageProto? stage = catalog.GetCatalogModel<StageProto>(run.StageId);
         if (stage is null)
             return (StageError.StageNotFound, null);
 

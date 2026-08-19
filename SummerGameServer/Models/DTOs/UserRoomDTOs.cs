@@ -9,13 +9,13 @@ namespace SummerGameServer.Models.DTOs
 
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.MaxLength(100)]
-        public TrapData[] TrapDatas { get; set; } = [];
+        public TrapProto[] TrapDatas { get; set; } = [];
     }
     public sealed record UserRoomResponse
     {
         public int UserId { get; set; }
-        public MapData MapData { get; set; } = null!;
-        public TrapData[] TrapDatas { get; set; } = [];
+        public MapProto MapData { get; set; } = null!;
+        public TrapProto[] TrapDatas { get; set; } = [];
     }
 
 }

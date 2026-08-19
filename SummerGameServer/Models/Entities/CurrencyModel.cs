@@ -10,10 +10,10 @@ namespace SummerGameServer.Models.Entities
         EventToken = 4,
     }
 
-    public class Currency
+    public class CurrencyModel
     {
         public int UserId { get; set; }
-        public User User { get; set; } = null!;
+        public UserModel User { get; set; } = null!;
         public CurrencyType Type { get; set; }
         public long Amount { get; set; } = 0;
     }

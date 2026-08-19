@@ -19,7 +19,7 @@ public sealed record TokenRefreshResponse(
     string RefreshToken,
     DateTime RefreshTokenExpiresAt);
 
-public sealed record IssuedRefreshToken(
+public sealed record IssuedRefreshTokenProto(
     string Value,
     DateTime ExpiresAt);
 
@@ -32,7 +32,7 @@ public enum RefreshTokenStatus
     Reused
 }
 
-public sealed record RefreshTokenRotationResult(
+public sealed record RefreshTokenRotationResultProto(
     RefreshTokenStatus Status,
     int? UserId = null,
     string? RefreshToken = null,

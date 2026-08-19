@@ -1,6 +1,6 @@
 ﻿namespace SummerGameServer.Models.Datas
 {
-    public sealed record MapData(int MapId, int Width, int Height, bool[] TileDatas) : ICatalogModel
+    public sealed record MapProto(int MapId, int Width, int Height, bool[] TileDatas) : ICatalogModel
     {
         public int Id => MapId;
     }

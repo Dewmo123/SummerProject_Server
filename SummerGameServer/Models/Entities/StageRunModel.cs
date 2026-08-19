@@ -7,11 +7,11 @@
         Abandoned = 2,
     }
 
-    public class StageRun
+    public class StageRunModel
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public Persistence.Entities.User User { get; set; } = null!;
+        public Persistence.Entities.UserModel User { get; set; } = null!;
         public int StageId { get; set; }
         public StageRunStatus Status { get; set; } = StageRunStatus.InProgress;
         public DateTime StartedAt { get; set; } = DateTime.UtcNow;

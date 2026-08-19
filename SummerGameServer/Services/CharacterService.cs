@@ -9,7 +9,7 @@ namespace SummerGameServer.Services;
 
 public sealed class CharacterService(UserDbContext dbContext)
 {
-    public async Task<Character?> GetOrCreateAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<CharacterModel?> GetOrCreateAsync(int userId, CancellationToken cancellationToken = default)
     {
         if (!await dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken))
             return null;
@@ -25,10 +25,10 @@ public sealed class CharacterService(UserDbContext dbContext)
 
     public async Task<CharacterResponse?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
-        Character? character = await GetOrCreateAsync(userId, cancellationToken);
+        CharacterModel? character = await GetOrCreateAsync(userId, cancellationToken);
         return character is null
             ? null
-            : CharacterResponse.FromEntity(character, Leveling.RequiredExp(character.Level));
+            : CharacterResponse.FromModel(character, Leveling.RequiredExp(character.Level));
     }
 
     public async Task<CharacterResponse?> AddExpAsync(int userId, long amount, CancellationToken cancellationToken = default)
@@ -46,7 +46,7 @@ public sealed class CharacterService(UserDbContext dbContext)
                 $"INSERT IGNORE INTO `Characters` (`UserId`, `Level`, `Exp`) SELECT {userId}, 1, 0 FROM `Users` WHERE `Id` = {userId}",
                 cancellationToken);
 
-            Character? character = await dbContext.Characters
+            CharacterModel? character = await dbContext.Characters
                 .FromSqlInterpolated($"SELECT * FROM `Characters` WHERE `UserId` = {userId} FOR UPDATE")
                 .SingleOrDefaultAsync(cancellationToken);
             if (character is null)
@@ -63,7 +63,7 @@ public sealed class CharacterService(UserDbContext dbContext)
             if (ownedTransaction is not null)
                 await ownedTransaction.CommitAsync(cancellationToken);
 
-            return CharacterResponse.FromEntity(character, Leveling.RequiredExp(character.Level));
+            return CharacterResponse.FromModel(character, Leveling.RequiredExp(character.Level));
         }
         catch
         {

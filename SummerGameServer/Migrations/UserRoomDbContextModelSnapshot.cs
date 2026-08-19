@@ -22,7 +22,7 @@ namespace SummerGameServer.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("Persistence.Entities.Character", b =>
+            modelBuilder.Entity("Persistence.Entities.CharacterModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,7 +50,7 @@ namespace SummerGameServer.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Persistence.Entities.User", b =>
+            modelBuilder.Entity("Persistence.Entities.UserModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -88,7 +88,7 @@ namespace SummerGameServer.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SummerGameServer.Models.DAOs.Currency", b =>
+            modelBuilder.Entity("SummerGameServer.Models.Entities.CurrencyModel", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -107,7 +107,7 @@ namespace SummerGameServer.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SummerGameServer.Models.DAOs.StageRun", b =>
+            modelBuilder.Entity("SummerGameServer.Models.Entities.StageRunModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -143,7 +143,7 @@ namespace SummerGameServer.Migrations
                     b.ToTable("StageRuns");
                 });
 
-            modelBuilder.Entity("SummerGameServer.Models.DAOs.UserRoom", b =>
+            modelBuilder.Entity("SummerGameServer.Models.Entities.UserRoomModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -169,20 +169,20 @@ namespace SummerGameServer.Migrations
                     b.ToTable("UserRooms");
                 });
 
-            modelBuilder.Entity("Persistence.Entities.Character", b =>
+            modelBuilder.Entity("Persistence.Entities.CharacterModel", b =>
                 {
-                    b.HasOne("Persistence.Entities.User", "User")
+                    b.HasOne("Persistence.Entities.UserModel", "User")
                         .WithOne()
-                        .HasForeignKey("Persistence.Entities.Character", "UserId")
+                        .HasForeignKey("Persistence.Entities.CharacterModel", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SummerGameServer.Models.DAOs.Currency", b =>
+            modelBuilder.Entity("SummerGameServer.Models.Entities.CurrencyModel", b =>
                 {
-                    b.HasOne("Persistence.Entities.User", "User")
+                    b.HasOne("Persistence.Entities.UserModel", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -191,9 +191,9 @@ namespace SummerGameServer.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SummerGameServer.Models.DAOs.StageRun", b =>
+            modelBuilder.Entity("SummerGameServer.Models.Entities.StageRunModel", b =>
                 {
-                    b.HasOne("Persistence.Entities.User", "User")
+                    b.HasOne("Persistence.Entities.UserModel", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -202,11 +202,11 @@ namespace SummerGameServer.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SummerGameServer.Models.DAOs.UserRoom", b =>
+            modelBuilder.Entity("SummerGameServer.Models.Entities.UserRoomModel", b =>
                 {
-                    b.HasOne("Persistence.Entities.User", "User")
+                    b.HasOne("Persistence.Entities.UserModel", "User")
                         .WithOne()
-                        .HasForeignKey("SummerGameServer.Models.DAOs.UserRoom", "UserId")
+                        .HasForeignKey("SummerGameServer.Models.Entities.UserRoomModel", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

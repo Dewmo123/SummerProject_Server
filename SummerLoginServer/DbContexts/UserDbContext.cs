@@ -10,14 +10,14 @@ namespace SummerLoginServer.DbContexts
         {
 
         }
-        public DbSet<User> Users => Set<User>();
-        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<UserModel> Users => Set<UserModel>();
+        public DbSet<RefreshTokenModel> RefreshTokens => Set<RefreshTokenModel>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
-            modelBuilder.Ignore<Character>();
+            modelBuilder.Ignore<CharacterModel>();
         }
     }
 }

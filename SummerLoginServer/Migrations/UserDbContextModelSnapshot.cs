@@ -22,7 +22,7 @@ namespace SummerLoginServer.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("Persistence.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Persistence.Entities.RefreshTokenModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -72,7 +72,7 @@ namespace SummerLoginServer.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Persistence.Entities.User", b =>
+            modelBuilder.Entity("Persistence.Entities.UserModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -107,9 +107,9 @@ namespace SummerLoginServer.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Persistence.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Persistence.Entities.RefreshTokenModel", b =>
                 {
-                    b.HasOne("Persistence.Entities.User", "User")
+                    b.HasOne("Persistence.Entities.UserModel", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -14,13 +14,13 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
 {
     private readonly TimeSpan _lifetime = TimeSpan.FromDays(options.Value.LifetimeDays);
 
-    public async Task<IssuedRefreshToken> CreateSessionAsync(int userId, CancellationToken cancellationToken)
+    public async Task<IssuedRefreshTokenProto> CreateSessionAsync(int userId, CancellationToken cancellationToken)
     {
         DateTime now = DateTime.UtcNow;
         DateTime expiresAt = now.Add(_lifetime);
         string rawToken = CreateRawToken();
 
-        dbContext.RefreshTokens.Add(new RefreshToken
+        dbContext.RefreshTokens.Add(new RefreshTokenModel
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -31,22 +31,22 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return new IssuedRefreshToken(rawToken, expiresAt);
+        return new IssuedRefreshTokenProto(rawToken, expiresAt);
     }
 
-    public async Task<RefreshTokenRotationResult> RotateAsync(string rawToken, CancellationToken cancellationToken)
+    public async Task<RefreshTokenRotationResultProto> RotateAsync(string rawToken, CancellationToken cancellationToken)
     {
         byte[] tokenHash = HashToken(rawToken);
         DateTime now = DateTime.UtcNow;
 
-        RefreshToken? current = await dbContext.RefreshTokens
+        RefreshTokenModel? current = await dbContext.RefreshTokens
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 token => token.TokenHash == tokenHash,
                 cancellationToken);
 
         if (current is null)
-            return new RefreshTokenRotationResult(RefreshTokenStatus.Invalid);
+            return new RefreshTokenRotationResultProto(RefreshTokenStatus.Invalid);
 
         if (current.UsedAt is not null)
         {
@@ -55,14 +55,14 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
                 now,
                 "refresh_token_reuse",
                 cancellationToken);
-            return new RefreshTokenRotationResult(RefreshTokenStatus.Reused);
+            return new RefreshTokenRotationResultProto(RefreshTokenStatus.Reused);
         }
 
         if (current.RevokedAt is not null)
-            return new RefreshTokenRotationResult(RefreshTokenStatus.Revoked);
+            return new RefreshTokenRotationResultProto(RefreshTokenStatus.Revoked);
 
         if (current.ExpiresAt <= now)
-            return new RefreshTokenRotationResult(RefreshTokenStatus.Expired);
+            return new RefreshTokenRotationResultProto(RefreshTokenStatus.Expired);
 
         string nextRawToken = CreateRawToken();
         Guid nextTokenId = Guid.NewGuid();
@@ -72,7 +72,7 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
             IsolationLevel.ReadCommitted,
             cancellationToken);
 
-        dbContext.RefreshTokens.Add(new RefreshToken
+        dbContext.RefreshTokens.Add(new RefreshTokenModel
         {
             Id = nextTokenId,
             UserId = current.UserId,
@@ -105,11 +105,11 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
                 now,
                 "refresh_token_reuse",
                 cancellationToken);
-            return new RefreshTokenRotationResult(RefreshTokenStatus.Reused);
+            return new RefreshTokenRotationResultProto(RefreshTokenStatus.Reused);
         }
         await transaction.CommitAsync(cancellationToken);
 
-        return new RefreshTokenRotationResult(
+        return new RefreshTokenRotationResultProto(
             RefreshTokenStatus.Success,
             current.UserId,
             nextRawToken,
@@ -119,7 +119,7 @@ public sealed class RefreshTokenService(UserDbContext dbContext, IOptions<Refres
     public async Task RevokeAsync(string rawToken, string reason, CancellationToken cancellationToken)
     {
         byte[] tokenHash = HashToken(rawToken);
-        RefreshToken? token = await dbContext.RefreshTokens
+        RefreshTokenModel? token = await dbContext.RefreshTokens
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 candidate => candidate.TokenHash.SequenceEqual(tokenHash),

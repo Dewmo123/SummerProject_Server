@@ -9,7 +9,7 @@ using System.Text;
 
 namespace SummerLoginServer.Services
 {
-    public sealed record IssuedToken(string Value, DateTime ExpiresAt);
+    public sealed record IssuedTokenProto(string Value, DateTime ExpiresAt);
 
     public class JwtTokenService
     {
@@ -31,7 +31,7 @@ namespace SummerLoginServer.Services
                 signingKey,
                 SecurityAlgorithms.HmacSha256);
         }
-        public IssuedToken CreateAccessToken(User user)
+        public IssuedTokenProto CreateAccessToken(UserModel user)
         {
             var expiresAt = DateTime.UtcNow.Add(_accessTokenLifetime);
             var claims = new[]
@@ -50,7 +50,7 @@ namespace SummerLoginServer.Services
                 expires: expiresAt,
                 signingCredentials: _signingCredentials);
 
-            return new IssuedToken(new JwtSecurityTokenHandler().WriteToken(jwt), expiresAt);
+            return new IssuedTokenProto(new JwtSecurityTokenHandler().WriteToken(jwt), expiresAt);
         }
     }
 }

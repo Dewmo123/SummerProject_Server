@@ -4,16 +4,16 @@ using Persistence.Entities;
 
 namespace Persistence.Configuration
 {
-    public sealed class CharacterConfiguration : IEntityTypeConfiguration<Character>
+    public sealed class CharacterConfiguration : IEntityTypeConfiguration<CharacterModel>
     {
-        public void Configure(EntityTypeBuilder<Character> builder)
+        public void Configure(EntityTypeBuilder<CharacterModel> builder)
         {
             builder.HasIndex(character => character.UserId)
                 .IsUnique();
 
             builder.HasOne(character => character.User)
                 .WithOne()
-                .HasForeignKey<Character>(character => character.UserId)
+                .HasForeignKey<CharacterModel>(character => character.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -11,7 +11,7 @@ namespace SummerLoginServer.Models
         string RefreshToken,
         DateTime RefreshTokenExpiresAt);
 
-    public sealed record GoogleUserInfo(
+    public sealed record GoogleUserInfoProto(
         string Subject,
         string? Email,
         string? Name,
