@@ -427,3 +427,11 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# SummerProject server runtime data
+*.db
+*.db-wal
+*.db-shm
+data/
+backups/
+logs/

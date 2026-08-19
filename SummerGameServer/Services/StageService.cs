@@ -6,6 +6,7 @@ using SummerGameServer.Models.Entities;
 using SummerGameServer.Models.DTOs;
 using SummerGameServer.Models.Datas;
 using System.Data;
+using SummerGameServer.Helpers.Catalog;
 
 namespace SummerGameServer.Services;
 

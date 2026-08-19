@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Persistence.Extensions;
 using SummerGameServer.DbContexts;
+using SummerGameServer.Helpers.Catalog;
 using SummerGameServer.Services;
 using System.Threading.RateLimiting;
 

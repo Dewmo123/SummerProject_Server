@@ -3,7 +3,7 @@ using Newtonsoft.Json.Serialization;
 using SummerGameServer.Models;
 using SummerGameServer.Models.Datas;
 
-namespace SummerGameServer.Services
+namespace SummerGameServer.Helpers.Catalog
 {
     public class CatalogManager
     {

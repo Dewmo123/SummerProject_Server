@@ -1,6 +1,6 @@
 ﻿using SummerGameServer.Models.Datas;
 
-namespace SummerGameServer.Services
+namespace SummerGameServer.Helpers.Catalog
 {
     public interface ICatalog
     {

@@ -1,5 +1,5 @@
-﻿using SummerGameServer.Models.Datas;
-using SummerGameServer.Services;
+﻿using SummerGameServer.Helpers.Catalog;
+using SummerGameServer.Models.Datas;
 
 namespace SummerGameServer.Models.DTOs
 {
